@@ -25,10 +25,10 @@ class App {
         this.camera = new THREE.PerspectiveCamera(
             40,
             window.innerWidth / window.innerHeight,
-            100,
+            0.1,
             2000
         );
-        this.camera.position.set(0, 0, 1000);
+        this.camera.position.set(0, 500, -1000);
 
         // light
         const color = 0xffffff;
@@ -38,23 +38,26 @@ class App {
         this.scene.add(light);
 
         // control
-        new OrbitControls(this.camera, this.container);
+        this.control = new OrbitControls(this.camera, this.container);
+        //this.control.autoRotate = true;
 
-        // set background
+        // set ground
         const planeGeometry = new THREE.PlaneGeometry(60, 60, 9, 9);
-        const planeMaterial = new THREE.MeshBasicMaterial({ color:0xAAAAAA });
+        const planeMaterial = new THREE.MeshBasicMaterial({ color:0xAAAAAA, side: THREE.DoubleSide });
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-        plane.rotation.x = -0.4 * Math.PI;
-        plane.position.set(15, 0, 0);
-        plane.scale.multiplyScalar( 50 );
+        plane.rotation.x = -0.5 * Math.PI;
+        plane.scale.multiplyScalar( 30 );
         this.scene.add(plane);
-        /*const gltfLoader = new GLTFLoader();
+
+        /* terrain 모델
+        const gltfLoader = new GLTFLoader();
         gltfLoader.load('./model/terrain.glb', (gltf) => {
             this.terrain = gltf.scene.children[ 0 ];
             this.terrain.material = new THREE.MeshNormalMaterial();
             this.terrain.scale.multiplyScalar( 5 );
             this.scene.add( this.terrain );
-        });*/
+        });
+        */
 
         //
         this._render(1);
@@ -65,6 +68,7 @@ class App {
         if (this.hero) {
             this.hero.updateAnimation(time);
         }
+        this.control.update();
         requestAnimationFrame(this._render.bind(this));
     }
 
@@ -78,7 +82,9 @@ class Hero {
 
     constructor(app) {
         const fbxLoader = new FBXLoader();
-        fbxLoader.load('./model/katana_purple_swing.fbx', (fbx) => {
+        fbxLoader.load('./model/katana_purple_waiting.fbx', (fbx) => {
+            this.model = fbx;
+
             // load model
             fbx.traverse(child => {
                 if (child.isMesh) {
@@ -107,17 +113,19 @@ class Hero {
             this.mixer = mixer;
 
             this.animations = {};
+            console.log(fbx.animations);
 
-            const attackAction = fbx.mixer.clipAction(fbx.animations[0]);
+            const attackAction = fbx.mixer.clipAction(fbx.animations[1]);
             attackAction.setLoop(THREE.LoopOnce);
             this.animations['ATTACK'] = attackAction;
 
-            const idleAction = fbx.mixer.clipAction(fbx.animations[1]);
+            const idleAction = fbx.mixer.clipAction(fbx.animations[0]);
             idleAction.play();
             this.animations['IDLE'] = idleAction;
 
             this.curAnimation = idleAction;
 
+            fbx.position.z -= 450;
             app.scene.add(fbx);
             app.setHero(this);
         });
