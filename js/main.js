@@ -1,5 +1,4 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.132.2";
-import {GLTFLoader} from "https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js";
 import {OrbitControls} from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
 import {FBXLoader} from "https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/FBXLoader.js";
 
@@ -128,6 +127,7 @@ class Hero {
 
             const attackAction = fbx.mixer.clipAction(fbx.animations[0]);
             attackAction.setLoop(THREE.LoopOnce);
+            attackAction.setDuration(0.7);
             this.animations['ATTACK'] = attackAction;
 
             const idleAction = fbx.mixer.clipAction(fbx.animations[1]);
@@ -197,6 +197,7 @@ class Monster {
 
             const attackAction = fbx.mixer.clipAction(fbx.animations[0]);
             attackAction.setLoop(THREE.LoopOnce);
+            attackAction.setDuration(0.7);
             this.animations['ATTACK'] = attackAction;
 
             const idleAction = fbx.mixer.clipAction(fbx.animations[1]);
