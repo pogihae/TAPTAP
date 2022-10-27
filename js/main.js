@@ -41,13 +41,20 @@ class App {
         new OrbitControls(this.camera, this.container);
 
         // set background
-        const gltfLoader = new GLTFLoader();
+        const planeGeometry = new THREE.PlaneGeometry(60, 60, 9, 9);
+        const planeMaterial = new THREE.MeshBasicMaterial({ color:0xAAAAAA });
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -0.4 * Math.PI;
+        plane.position.set(15, 0, 0);
+        plane.scale.multiplyScalar( 50 );
+        this.scene.add(plane);
+        /*const gltfLoader = new GLTFLoader();
         gltfLoader.load('./model/terrain.glb', (gltf) => {
             this.terrain = gltf.scene.children[ 0 ];
             this.terrain.material = new THREE.MeshNormalMaterial();
             this.terrain.scale.multiplyScalar( 5 );
             this.scene.add( this.terrain );
-        });
+        });*/
 
         //
         this._render(1);
@@ -67,7 +74,6 @@ class App {
 }
 
 class Hero {
-    ANIMATION_IDLE = 1; ANIMATION_ATTACK = 0;
     prevAnimationTick = 0;
 
     constructor(app) {
@@ -94,21 +100,21 @@ class Hero {
             // model animation
             const mixer = new THREE.AnimationMixer(fbx);
             mixer.addEventListener('finished', _ => {
-               this.changeAnimation(this.ANIMATION_IDLE);
+               this.changeAnimation('IDLE');
             });
 
             fbx.mixer = mixer;
             this.mixer = mixer;
 
-            this.animations = [];
+            this.animations = {};
 
-            const attackAction = fbx.mixer.clipAction(fbx.animations[this.ANIMATION_ATTACK]);
+            const attackAction = fbx.mixer.clipAction(fbx.animations[0]);
             attackAction.setLoop(THREE.LoopOnce);
-            this.animations.push(attackAction);
+            this.animations['ATTACK'] = attackAction;
 
-            const idleAction = fbx.mixer.clipAction(fbx.animations[this.ANIMATION_IDLE]);
+            const idleAction = fbx.mixer.clipAction(fbx.animations[1]);
             idleAction.play();
-            this.animations.push(idleAction);
+            this.animations['IDLE'] = idleAction;
 
             this.curAnimation = idleAction;
 
@@ -117,11 +123,11 @@ class Hero {
         });
     }
 
-    changeAnimation(index) {
+    changeAnimation(name) {
         if (!this.animations) return;
 
         const previousAnimationAction = this.curAnimation;
-        this.curAnimation = this.animations[index];
+        this.curAnimation = this.animations[name];
 
         if(previousAnimationAction !== this.curAnimation) {
             previousAnimationAction.fadeOut(0.5);
@@ -144,6 +150,6 @@ window.onload = function() {
     const hero = new Hero(app);
 
     window.onclick = function() {
-        hero.changeAnimation(hero.ANIMATION_ATTACK);
+        hero.changeAnimation('ATTACK');
     }
 }
