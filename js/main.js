@@ -84,10 +84,8 @@ class App {
         this.monster = monster;
         this.monster.model.rotation.y += Math.PI; // 앞 모습
 
-        this.monster.status.position.set(1, 300, 1);
-
         this.scene.add(this.monster.model);
-        this.scene.add(this.monster.status);
+        this.scene.add(this.monster.HPbar);
     }
 }
 
@@ -187,10 +185,19 @@ class Monster {
                 }
             });
 
-            // model animation
+            // 몬스터 체력바
+            const geometry = new THREE.BoxGeometry(50, 50, 50);
+            const material = new THREE.MeshMatcapMaterial( {color: 0x123456} );
+            const cube = new THREE.Mesh( geometry, material );
+            cube.position.set(1, 300, 1);
+            this.HPbar = cube;
+
+            // 애니메이션
             const mixer = new THREE.AnimationMixer(fbx);
             mixer.addEventListener('finished', _ => {
                 this.changeAnimation('IDLE');
+                this.HPbar.material.color = new THREE.Color(0xffffff * Math.random());
+                this.HPbar.material.needsUpdate = true;
             });
 
             fbx.mixer = mixer;
@@ -209,12 +216,6 @@ class Monster {
             this.animations['IDLE'] = idleAction;
 
             this.curAnimation = idleAction;
-
-            // 몬스터 체력바
-            const geometry = new THREE.BoxGeometry(50, 50, 50);
-            const material = new THREE.MeshMatcapMaterial( {color: 0x123456} );
-            const cube = new THREE.Mesh( geometry, material );
-            this.status = cube;
 
             onModelLoaded(this);
         });
