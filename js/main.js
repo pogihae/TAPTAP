@@ -83,7 +83,11 @@ class App {
     setMonster(monster) {
         this.monster = monster;
         this.monster.model.rotation.y += Math.PI; // 앞 모습
+
+        this.monster.status.position.set(1, 300, 1);
+
         this.scene.add(this.monster.model);
+        this.scene.add(this.monster.status);
     }
 }
 
@@ -198,13 +202,19 @@ class Monster {
             const attackAction = fbx.mixer.clipAction(fbx.animations[0]);
             attackAction.setLoop(THREE.LoopOnce);
             attackAction.setDuration(0.7);
-            this.animations['ATTACK'] = attackAction;
+            this.animations['HIT_REACTION'] = attackAction;
 
             const idleAction = fbx.mixer.clipAction(fbx.animations[1]);
             idleAction.play();
             this.animations['IDLE'] = idleAction;
 
             this.curAnimation = idleAction;
+
+            // 몬스터 체력바
+            const geometry = new THREE.BoxGeometry(50, 50, 50);
+            const material = new THREE.MeshMatcapMaterial( {color: 0x123456} );
+            const cube = new THREE.Mesh( geometry, material );
+            this.status = cube;
 
             onModelLoaded(this);
         });
@@ -239,6 +249,6 @@ window.onload = function() {
 
     window.onclick = function() {
         hero.changeAnimation('ATTACK');
-        monster.changeAnimation('ATTACK');
+        monster.changeAnimation('HIT_REACTION');
     }
 }
