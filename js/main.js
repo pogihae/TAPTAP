@@ -34,7 +34,7 @@ class App {
         const color = 0xffffff;
         const intensity = 5;
         const light = new THREE.DirectionalLight(color, intensity);
-        light.position.set(0, 0, 100);
+        light.position.set(0, 500, -1000);
         this.scene.add(light);
 
         // control
@@ -74,6 +74,9 @@ class App {
 
     setHero(hero) {
         this.hero = hero;
+        window.onclick = function() {
+            hero.changeAnimation('ATTACK');
+        }
     }
 }
 
@@ -125,7 +128,9 @@ class Hero {
 
             this.curAnimation = idleAction;
 
+            // 뒷 모습
             fbx.position.z -= 450;
+
             app.scene.add(fbx);
             app.setHero(this);
         });
@@ -156,8 +161,4 @@ class Hero {
 window.onload = function() {
     const app = new App();
     const hero = new Hero(app);
-
-    window.onclick = function() {
-        hero.changeAnimation('ATTACK');
-    }
 }
