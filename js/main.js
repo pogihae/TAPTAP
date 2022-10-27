@@ -68,24 +68,32 @@ class App {
         if (this.hero) {
             this.hero.updateAnimation(time);
         }
+        if (this.monster) {
+            this.monster.updateAnimation(time);
+        }
         this.control.update();
         requestAnimationFrame(this._render.bind(this));
     }
 
     setHero(hero) {
         this.hero = hero;
-        window.onclick = function() {
-            hero.changeAnimation('ATTACK');
-        }
+        this.hero.model.position.z -= 450;
+        this.scene.add(this.hero.model);
+    }
+
+    setMonster(monster) {
+        this.monster = monster;
+        this.monster.model.rotation.y += Math.PI; // 앞 모습
+        this.scene.add(this.monster.model);
     }
 }
 
 class Hero {
     prevAnimationTick = 0;
 
-    constructor(app) {
+    constructor(onModelLoaded) {
         const fbxLoader = new FBXLoader();
-        fbxLoader.load('./model/katana_purple_waiting.fbx', (fbx) => {
+        fbxLoader.load('./model/katana_purple_swing.fbx', (fbx) => {
             this.model = fbx;
 
             // load model
@@ -118,21 +126,86 @@ class Hero {
             this.animations = {};
             console.log(fbx.animations);
 
-            const attackAction = fbx.mixer.clipAction(fbx.animations[1]);
+            const attackAction = fbx.mixer.clipAction(fbx.animations[0]);
             attackAction.setLoop(THREE.LoopOnce);
             this.animations['ATTACK'] = attackAction;
 
-            const idleAction = fbx.mixer.clipAction(fbx.animations[0]);
+            const idleAction = fbx.mixer.clipAction(fbx.animations[1]);
             idleAction.play();
             this.animations['IDLE'] = idleAction;
 
             this.curAnimation = idleAction;
 
-            // 뒷 모습
-            fbx.position.z -= 450;
+            onModelLoaded(this);
+        });
+    }
 
-            app.scene.add(fbx);
-            app.setHero(this);
+    changeAnimation(name) {
+        if (!this.animations) return;
+
+        const previousAnimationAction = this.curAnimation;
+        this.curAnimation = this.animations[name];
+
+        if(previousAnimationAction !== this.curAnimation) {
+            previousAnimationAction.fadeOut(0.5);
+            this.curAnimation.reset().fadeIn(0.1).play();
+        }
+    }
+
+    updateAnimation(time) {
+        time *= 0.001;
+        if (this.mixer) {
+            const deltaTime = time - this.prevAnimationTick;
+            this.mixer.update(deltaTime);
+        }
+        this.prevAnimationTick = time;
+    }
+}
+
+class Monster {
+    prevAnimationTick = 0;
+
+    constructor(onModelLoaded) {
+        const fbxLoader = new FBXLoader();
+        fbxLoader.load('./model/monster.fbx', (fbx) => {
+            this.model = fbx;
+
+            // load model
+            fbx.traverse(child => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+                if (child.isGroup) {
+                    child.rotation.x=Math.PI;
+                    child.rotation.y=Math.PI;
+                    child.rotation.z=Math.PI;
+                }
+            });
+
+            // model animation
+            const mixer = new THREE.AnimationMixer(fbx);
+            mixer.addEventListener('finished', _ => {
+                this.changeAnimation('IDLE');
+            });
+
+            fbx.mixer = mixer;
+            this.mixer = mixer;
+
+            this.animations = {};
+            console.log(fbx.animations);
+
+            const attackAction = fbx.mixer.clipAction(fbx.animations[0]);
+            attackAction.setLoop(THREE.LoopOnce);
+            this.animations['ATTACK'] = attackAction;
+
+            const idleAction = fbx.mixer.clipAction(fbx.animations[1]);
+            idleAction.play();
+            this.animations['IDLE'] = idleAction;
+
+            this.curAnimation = idleAction;
+
+            onModelLoaded(this);
         });
     }
 
@@ -160,5 +233,11 @@ class Hero {
 
 window.onload = function() {
     const app = new App();
-    const hero = new Hero(app);
+    const hero = new Hero(hero => { app.setHero(hero); });
+    const monster = new Monster(monster => { app.setMonster(monster); });
+
+    window.onclick = function() {
+        hero.changeAnimation('ATTACK');
+        monster.changeAnimation('ATTACK');
+    }
 }
