@@ -7,7 +7,7 @@ class App {
     // init
     constructor() {
         // renderer
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer = new THREE.WebGLRenderer({antialias: true});
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.shadowMap.enabled = true;
@@ -21,12 +21,7 @@ class App {
         this.scene.background = new THREE.Color(0xffffff);
 
         // camera
-        this.camera = new THREE.PerspectiveCamera(
-            40,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            2000
-        );
+        this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 2000);
         this.camera.position.set(0, 500, -1000);
 
         // light
@@ -42,10 +37,10 @@ class App {
 
         // set ground
         const planeGeometry = new THREE.PlaneGeometry(60, 60, 9, 9);
-        const planeMaterial = new THREE.MeshBasicMaterial({ color:0xAAAAAA, side: THREE.DoubleSide });
+        const planeMaterial = new THREE.MeshBasicMaterial({color: 0xAAAAAA, side: THREE.DoubleSide});
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.rotation.x = -0.5 * Math.PI;
-        plane.scale.multiplyScalar( 30 );
+        plane.scale.multiplyScalar(30);
         this.scene.add(plane);
 
         /* terrain 모델
@@ -75,12 +70,20 @@ class App {
     }
 
     setHero(hero) {
+        if (this.hero) {
+            this.scene.remove(this.hero.model);
+            this.hero = null;
+        }
         this.hero = hero;
         this.hero.model.position.z -= 450;
         this.scene.add(this.hero.model);
     }
 
     setMonster(monster) {
+        if (this.monster) {
+            this.scene.remove(this.monster.model);
+            this.monster = null;
+        }
         this.monster = monster;
         this.monster.model.rotation.y += Math.PI; // 앞 모습
 
@@ -109,16 +112,16 @@ class Hero {
                     child.material.needsUpdate = true;
                 }
                 if (child.isGroup) {
-                    child.rotation.x=Math.PI;
-                    child.rotation.y=Math.PI;
-                    child.rotation.z=Math.PI;
+                    child.rotation.x = Math.PI;
+                    child.rotation.y = Math.PI;
+                    child.rotation.z = Math.PI;
                 }
             });
 
             // model animation
             const mixer = new THREE.AnimationMixer(fbx);
             mixer.addEventListener('finished', _ => {
-               this.changeAnimation('IDLE');
+                this.changeAnimation('IDLE');
             });
 
             fbx.mixer = mixer;
@@ -148,7 +151,7 @@ class Hero {
         const previousAnimationAction = this.curAnimation;
         this.curAnimation = this.animations[name];
 
-        if(previousAnimationAction !== this.curAnimation) {
+        if (previousAnimationAction !== this.curAnimation) {
             previousAnimationAction.fadeOut(0.5);
             this.curAnimation.reset().fadeIn(0.1).play();
         }
@@ -179,16 +182,16 @@ class Monster {
                     child.receiveShadow = true;
                 }
                 if (child.isGroup) {
-                    child.rotation.x=Math.PI;
-                    child.rotation.y=Math.PI;
-                    child.rotation.z=Math.PI;
+                    child.rotation.x = Math.PI;
+                    child.rotation.y = Math.PI;
+                    child.rotation.z = Math.PI;
                 }
             });
 
             // 몬스터 체력바
             const geometry = new THREE.BoxGeometry(50, 50, 50);
-            const material = new THREE.MeshMatcapMaterial( {color: 0x123456} );
-            const cube = new THREE.Mesh( geometry, material );
+            const material = new THREE.MeshMatcapMaterial({color: 0x123456});
+            const cube = new THREE.Mesh(geometry, material);
             cube.position.set(1, 300, 1);
             this.HPbar = cube;
 
@@ -227,7 +230,7 @@ class Monster {
         const previousAnimationAction = this.curAnimation;
         this.curAnimation = this.animations[name];
 
-        if(previousAnimationAction !== this.curAnimation) {
+        if (previousAnimationAction !== this.curAnimation) {
             previousAnimationAction.fadeOut(0.5);
             this.curAnimation.reset().fadeIn(0.1).play();
         }
@@ -243,12 +246,16 @@ class Monster {
     }
 }
 
-window.onload = function() {
+window.onload = function () {
     const app = new App();
-    const hero = new Hero(hero => { app.setHero(hero); });
-    const monster = new Monster(monster => { app.setMonster(monster); });
+    const hero = new Hero(hero => {
+        app.setHero(hero);
+    });
+    const monster = new Monster(monster => {
+        app.setMonster(monster);
+    });
 
-    window.onclick = function() {
+    window.onclick = function () {
         hero.changeAnimation('ATTACK');
         monster.changeAnimation('HIT_REACTION');
     }
