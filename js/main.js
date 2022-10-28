@@ -42,16 +42,16 @@ class App {
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.rotation.x = -0.5 * Math.PI;
         plane.scale.multiplyScalar(30);
-        //this.scene.add(plane);
+        this.scene.add(plane);
 
-        //terrain 모델
+        /*//terrain 모델
         const gltfLoader = new GLTFLoader();
         gltfLoader.load('./model/terrain.glb', (gltf) => {
             this.terrain = gltf.scene.children[ 0 ];
             this.terrain.material = new THREE.MeshNormalMaterial();
             this.terrain.scale.multiplyScalar( 80 );
             this.scene.add( this.terrain );
-        });
+        });*/
 
 
         //
@@ -96,9 +96,9 @@ class App {
 class Hero {
     prevAnimationTick = 0;
 
-    constructor(onModelLoaded) {
+    constructor(modelPath, onModelLoaded) {
         const fbxLoader = new FBXLoader();
-        fbxLoader.load('./model/katana_purple_swing.fbx', (fbx) => {
+        fbxLoader.load(modelPath, (fbx) => {
             this.model = fbx;
 
             // load model
@@ -136,7 +136,7 @@ class Hero {
             attackAction.setDuration(0.7);
             this.animations['ATTACK'] = attackAction;
 
-            const idleAction = fbx.mixer.clipAction(fbx.animations[1]);
+            const idleAction = fbx.mixer.clipAction(fbx.animations[3]);
             idleAction.play();
             this.animations['IDLE'] = idleAction;
 
@@ -171,9 +171,9 @@ class Hero {
 class Monster {
     prevAnimationTick = 0;
 
-    constructor(onModelLoaded) {
+    constructor(modelPath, onModelLoaded) {
         const fbxLoader = new FBXLoader();
-        fbxLoader.load('./model/monster.fbx', (fbx) => {
+        fbxLoader.load(modelPath, (fbx) => {
             this.model = fbx;
 
             // load model
@@ -249,10 +249,10 @@ class Monster {
 
 window.onload = function () {
     const app = new App();
-    const hero = new Hero(hero => {
+    const hero = new Hero('./model/sword_pack.fbx',hero => {
         app.setHero(hero);
     });
-    const monster = new Monster(monster => {
+    const monster = new Monster('./model/monster.fbx', monster => {
         app.setMonster(monster);
     });
 
