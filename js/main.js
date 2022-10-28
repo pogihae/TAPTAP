@@ -1,5 +1,6 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.132.2";
 import {OrbitControls} from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
+import {GLTFLoader} from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
 import {FBXLoader} from "https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/FBXLoader.js";
 
 class App {
@@ -18,7 +19,7 @@ class App {
 
         // scene
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0xffffff);
+        this.scene.background = new THREE.TextureLoader().load( './image/sky.jpg' );
 
         // camera
         this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 2000);
@@ -36,22 +37,22 @@ class App {
         //this.control.autoRotate = true;
 
         // set ground
-        const planeGeometry = new THREE.PlaneGeometry(60, 60, 9, 9);
+        const planeGeometry = new THREE.PlaneGeometry(30, 100, 9, 9);
         const planeMaterial = new THREE.MeshBasicMaterial({color: 0xAAAAAA, side: THREE.DoubleSide});
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.rotation.x = -0.5 * Math.PI;
         plane.scale.multiplyScalar(30);
-        this.scene.add(plane);
+        //this.scene.add(plane);
 
-        /* terrain 모델
+        //terrain 모델
         const gltfLoader = new GLTFLoader();
         gltfLoader.load('./model/terrain.glb', (gltf) => {
             this.terrain = gltf.scene.children[ 0 ];
             this.terrain.material = new THREE.MeshNormalMaterial();
-            this.terrain.scale.multiplyScalar( 5 );
+            this.terrain.scale.multiplyScalar( 80 );
             this.scene.add( this.terrain );
         });
-        */
+
 
         //
         this._render(1);
@@ -75,7 +76,7 @@ class App {
             this.hero = null;
         }
         this.hero = hero;
-        this.hero.model.position.z -= 450;
+        this.hero.model.position.z -= 430;
         this.scene.add(this.hero.model);
     }
 
@@ -189,10 +190,10 @@ class Monster {
             });
 
             // 몬스터 체력바
-            const geometry = new THREE.BoxGeometry(50, 50, 50);
+            const geometry = new THREE.BoxGeometry(150, 10, 10);
             const material = new THREE.MeshMatcapMaterial({color: 0x123456});
             const cube = new THREE.Mesh(geometry, material);
-            cube.position.set(1, 300, 1);
+            cube.position.set(1, 155, 1);
             this.HPbar = cube;
 
             // 애니메이션
