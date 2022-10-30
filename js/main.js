@@ -209,6 +209,7 @@ class Hero {
                 if (this.curAnimation === walkAction) {
                     this.model.translateZ(50);
                     if (++this.walkCount > 2) {
+                        walkAction.fadeOut(0.5);
                         this.changeAnimation('IDLE');
                     }
                 }
@@ -227,7 +228,7 @@ class Hero {
 
 
         if (previousAnimationAction !== this.curAnimation) {
-            this.mixer.stopAllAction();
+            //this.mixer.stopAllAction();
             //previousAnimationAction.fadeOut(0.5);
             this.curAnimation.reset().play();
         }
