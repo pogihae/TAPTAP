@@ -184,7 +184,7 @@ class Hero {
             this.animations = {};
             console.log(fbx.animations);
 
-            const attackAction = fbx.mixer.clipAction(fbx.animations[0]);
+            const attackAction = fbx.mixer.clipAction(fbx.animations[2]);
             attackAction.setLoop(THREE.LoopOnce);
             attackAction.setDuration(0.7);
             this.animations['ATTACK'] = attackAction;
@@ -192,7 +192,7 @@ class Hero {
             const idleAction = fbx.mixer.clipAction(fbx.animations[3]);
             this.animations['IDLE'] = idleAction;
 
-            const walkAction = fbx.mixer.clipAction(fbx.animations[5]);
+            const walkAction = fbx.mixer.clipAction(fbx.animations[0]);
             walkAction.setDuration(2);
             this.animations['WALK'] = walkAction;
 
@@ -325,7 +325,7 @@ class Monster {
 
 window.onload = function () {
     const app = new App();
-    const hero = new Hero('./model/sword_pack_edited.fbx',hero => {
+    const hero = new Hero('./model/pack_edited.fbx',hero => {
         app.setHero(hero);
     });
     const monster = new Monster('./model/monster.fbx', monster => {
