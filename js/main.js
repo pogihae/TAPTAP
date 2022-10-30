@@ -193,7 +193,6 @@ class Hero {
             this.animations['IDLE'] = idleAction;
 
             const walkAction = fbx.mixer.clipAction(fbx.animations[5]);
-            //walkAction.setLoop(THREE.LoopOnce);
             walkAction.setDuration(2);
             this.animations['WALK'] = walkAction;
 
@@ -203,11 +202,6 @@ class Hero {
             mixer.addEventListener('finished', _ => {
                 if (this.curAnimation === attackAction) {
                     this.changeAnimation('IDLE');
-                }
-                if (this.curAnimation === walkAction) {
-                    this.model.position.z += 50;
-                    this.changeAnimation('IDLE');
-
                 }
             });
 
@@ -230,9 +224,11 @@ class Hero {
         const previousAnimationAction = this.curAnimation;
         this.curAnimation = this.animations[name];
 
+
         if (previousAnimationAction !== this.curAnimation) {
-            previousAnimationAction.fadeOut(0.5);
-            this.curAnimation.reset().fadeIn(0.1).play();
+            this.mixer.stopAllAction();
+            //previousAnimationAction.fadeOut(0.5);
+            this.curAnimation.reset().play();
         }
     }
 
@@ -329,7 +325,6 @@ window.onload = function () {
     const app = new App();
     const hero = new Hero('./model/sword_pack.fbx',hero => {
         app.setHero(hero);
-        //hero.changeAnimation('WALK');
     });
     const monster = new Monster('./model/monster.fbx', monster => {
         app.setMonster(monster);
