@@ -19,30 +19,59 @@ class App {
 
         // scene
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.TextureLoader().load( './image/sky.jpg' );
+        this.scene.background = new THREE.Color(0xa0a0a0);
+        this.scene.fog = new THREE.Fog(0xa0a0a0, 1000, 5000);
 
         // camera
-        this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 2000);
+        this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000);
         this.camera.position.set(0, 500, -1000);
 
         // light
-        const color = 0xffffff;
+        /*const color = 0xffffff;
         const intensity = 5;
         const light = new THREE.DirectionalLight(color, intensity);
         light.position.set(0, 500, -1000);
+        this.scene.add(light);*/
+
+        let light = new THREE.HemisphereLight(0xffffff, 0x444444);
+        light.position.set(0, 200, 0);
         this.scene.add(light);
+
+        const shadowSize = 200;
+        light = new THREE.DirectionalLight(0xffffff);
+        light.position.set(0, 200, -100);
+        light.castShadow = true;
+        light.shadow.camera.top = shadowSize;
+        light.shadow.camera.bottom = -shadowSize;
+        light.shadow.camera.left = -shadowSize;
+        light.shadow.camera.right = shadowSize;
+        this.scene.add(light);
+        this.sun = light;
 
         // control
         this.control = new OrbitControls(this.camera, this.container);
         //this.control.autoRotate = true;
 
         // set ground
-        const planeGeometry = new THREE.PlaneGeometry(30, 100, 9, 9);
+        /*const planeGeometry = new THREE.PlaneGeometry(30, 100, 9, 9);
         const planeMaterial = new THREE.MeshBasicMaterial({color: 0xAAAAAA, side: THREE.DoubleSide});
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.rotation.x = -0.5 * Math.PI;
         plane.scale.multiplyScalar(30);
-        this.scene.add(plane);
+        this.scene.add(plane);*/
+
+        var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(10000, 10000), new THREE.MeshPhongMaterial({
+            color: 0x999999,
+            depthWrite: false
+        }));
+        mesh.rotation.x = -Math.PI / 2;
+        mesh.receiveShadow = true;
+        this.scene.add(mesh);
+
+        var grid = new THREE.GridHelper(5000, 40, 0x000000, 0x000000);
+        grid.material.opacity = 0.2;
+        grid.material.transparent = true;
+        this.scene.add(grid);
 
         /*//terrain 모델
         const gltfLoader = new GLTFLoader();
@@ -70,6 +99,10 @@ class App {
         requestAnimationFrame(this._render.bind(this));
     }
 
+    setBackground(texture) {
+        this.scene.background = texture;
+    }
+
     setHero(hero) {
         if (this.hero) {
             this.scene.remove(this.hero.model);
@@ -95,6 +128,7 @@ class App {
 
 class Hero {
     prevAnimationTick = 0;
+    walkCount = 0;
 
     constructor(modelPath, onModelLoaded) {
         const fbxLoader = new FBXLoader();
@@ -121,9 +155,6 @@ class Hero {
 
             // model animation
             const mixer = new THREE.AnimationMixer(fbx);
-            mixer.addEventListener('finished', _ => {
-                this.changeAnimation('IDLE');
-            });
 
             fbx.mixer = mixer;
             this.mixer = mixer;
@@ -137,10 +168,30 @@ class Hero {
             this.animations['ATTACK'] = attackAction;
 
             const idleAction = fbx.mixer.clipAction(fbx.animations[3]);
-            idleAction.play();
             this.animations['IDLE'] = idleAction;
 
+            const walkAction = fbx.mixer.clipAction(fbx.animations[5]);
+            //walkAction.setLoop(THREE.LoopOnce);
+            //walkAction.repetitions = 2;
+            this.animations['WALK'] = walkAction;
+
             this.curAnimation = idleAction;
+            idleAction.play();
+
+            mixer.addEventListener('finished', _ => {
+                if (this.curAnimation === attackAction) {
+                    this.changeAnimation('IDLE');
+                }
+            });
+
+            mixer.addEventListener('loop', _ => {
+                if (this.curAnimation === walkAction) {
+                    this.model.position.z += 50;
+                    if (++this.walkCount > 2) {
+                        this.changeAnimation('IDLE');
+                    }
+                }
+            });
 
             onModelLoaded(this);
         });
@@ -216,10 +267,10 @@ class Monster {
             this.animations['HIT_REACTION'] = attackAction;
 
             const idleAction = fbx.mixer.clipAction(fbx.animations[1]);
-            idleAction.play();
             this.animations['IDLE'] = idleAction;
 
             this.curAnimation = idleAction;
+            idleAction.play();
 
             onModelLoaded(this);
         });
@@ -251,6 +302,7 @@ window.onload = function () {
     const app = new App();
     const hero = new Hero('./model/sword_pack.fbx',hero => {
         app.setHero(hero);
+        hero.changeAnimation('WALK');
     });
     const monster = new Monster('./model/monster.fbx', monster => {
         app.setMonster(monster);
