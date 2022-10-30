@@ -225,6 +225,7 @@ class Hero {
         this.curAnimation = this.animations[name];
 
 
+
         if (previousAnimationAction !== this.curAnimation) {
             this.mixer.stopAllAction();
             //previousAnimationAction.fadeOut(0.5);
@@ -323,7 +324,7 @@ class Monster {
 
 window.onload = function () {
     const app = new App();
-    const hero = new Hero('./model/sword_pack.fbx',hero => {
+    const hero = new Hero('./model/sword_pack_edited.fbx',hero => {
         app.setHero(hero);
     });
     const monster = new Monster('./model/monster.fbx', monster => {
