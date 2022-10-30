@@ -24,7 +24,7 @@ class App {
 
         // camera
         this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000);
-        this.camera.position.set(0, 500, -1000);
+        this.camera.position.set(0, 500, 1000);
 
         // light
         /*const color = 0xffffff;
@@ -130,8 +130,11 @@ class App {
             this.hero = null;
         }
         this.hero = hero;
-        this.hero.model.position.z -= 430;
+        this.hero.model.position.z -= 560;
         this.scene.add(this.hero.model);
+
+        this.control.autoRotate = true;
+        this.control.autoRotateSpeed = 4.0;
     }
 
     setMonster(monster) {
@@ -208,7 +211,8 @@ class Hero {
             mixer.addEventListener('loop', _ => {
                 if (this.curAnimation === walkAction) {
                     this.model.translateZ(50);
-                    if (++this.walkCount > 2) {
+                    if (++this.walkCount > 4) {
+                        app.control.autoRotate = false;
                         walkAction.fadeOut(0.5);
                         this.changeAnimation('IDLE');
                     }
@@ -323,8 +327,9 @@ class Monster {
     }
 }
 
+const app = new App();
+
 window.onload = function () {
-    const app = new App();
     const hero = new Hero('./model/pack_edited.fbx',hero => {
         app.setHero(hero);
     });
