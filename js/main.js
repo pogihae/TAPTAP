@@ -73,6 +73,27 @@ class App {
         grid.material.transparent = true;
         this.scene.add(grid);
 
+        const geometry = new THREE.BoxGeometry(500, 400, 500);
+        const material = new THREE.MeshBasicMaterial({color: 0x222222, wireframe: true});
+
+        this.colliders = [];
+
+        for (let x = -5000; x < 5000; x += 1000) {
+            for (let z = -5000; z < 5000; z += 1000) {
+                if (x == 0 && z == 0) continue;
+                const box = new THREE.Mesh(geometry, material);
+                box.position.set(x, 250, z);
+                this.scene.add(box);
+                this.colliders.push(box);
+            }
+        }
+
+        const geometry2 = new THREE.BoxGeometry(1000, 40, 1000);
+        const stage = new THREE.Mesh(geometry2, material);
+        stage.position.set(0, 20, 0);
+        this.colliders.push(stage);
+        this.scene.add(stage);
+
         /*//terrain 모델
         const gltfLoader = new GLTFLoader();
         gltfLoader.load('./model/terrain.glb', (gltf) => {
