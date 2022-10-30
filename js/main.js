@@ -154,7 +154,8 @@ class Hero {
     constructor(modelPath, onModelLoaded) {
         const fbxLoader = new FBXLoader();
         fbxLoader.load(modelPath, (fbx) => {
-            this.model = fbx;
+            this.model = new THREE.Object3D();
+            this.model.add(fbx);
 
             // load model
             fbx.traverse(child => {
@@ -164,8 +165,8 @@ class Hero {
                 }
                 if (child instanceof THREE.Mesh) {
                     // hero texture
-                    child.material = new THREE.MeshNormalMaterial()
-                    child.material.needsUpdate = true;
+                    /*child.material = new THREE.MeshNormalMaterial()
+                    child.material.needsUpdate = true;*/
                 }
                 if (child.isGroup) {
                     child.rotation.x = Math.PI;
@@ -193,21 +194,26 @@ class Hero {
 
             const walkAction = fbx.mixer.clipAction(fbx.animations[5]);
             //walkAction.setLoop(THREE.LoopOnce);
-            //walkAction.repetitions = 2;
+            walkAction.setDuration(2);
             this.animations['WALK'] = walkAction;
 
-            this.curAnimation = idleAction;
-            idleAction.play();
+            this.curAnimation = walkAction;
+            walkAction.play();
 
             mixer.addEventListener('finished', _ => {
                 if (this.curAnimation === attackAction) {
                     this.changeAnimation('IDLE');
                 }
+                if (this.curAnimation === walkAction) {
+                    this.model.position.z += 50;
+                    this.changeAnimation('IDLE');
+
+                }
             });
 
             mixer.addEventListener('loop', _ => {
                 if (this.curAnimation === walkAction) {
-                    this.model.position.z += 50;
+                    this.model.translateZ(50);
                     if (++this.walkCount > 2) {
                         this.changeAnimation('IDLE');
                     }
@@ -323,7 +329,7 @@ window.onload = function () {
     const app = new App();
     const hero = new Hero('./model/sword_pack.fbx',hero => {
         app.setHero(hero);
-        hero.changeAnimation('WALK');
+        //hero.changeAnimation('WALK');
     });
     const monster = new Monster('./model/monster.fbx', monster => {
         app.setMonster(monster);
