@@ -76,12 +76,13 @@ class App {
 
     setBackground(material) {
         if (this.grid) {
+            this.scene.remove(this.mesh);
             this.scene.remove(this.grid);
         }
-        var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(10000, 10000), material);
-        mesh.rotation.x = -Math.PI / 2;
-        mesh.receiveShadow = true;
-        this.scene.add(mesh);
+        this.mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(10000, 10000), material);
+        this.mesh.rotation.x = -Math.PI / 2;
+        this.mesh.receiveShadow = true;
+        this.scene.add(this.mesh);
 
         this.grid = new THREE.GridHelper(5000, 40, 0x000000, 0x000000);
         this.grid.material.opacity = 0.2;
@@ -92,6 +93,9 @@ class App {
     setColliders(newGeometry, newMaterial) {
         if (this.stage) {
             this.scene.remove(this.stage);
+            for (let i=0; i<this.colliders.length; i++) {
+                this.scene.remove(this.colliders[i]);
+            }
         }
         const geometry = newGeometry;
         const material = newMaterial;
