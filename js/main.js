@@ -52,59 +52,13 @@ class App {
         this.control = new OrbitControls(this.camera, this.container);
         //this.control.autoRotate = true;
 
-        // set ground
-        /*const planeGeometry = new THREE.PlaneGeometry(30, 100, 9, 9);
-        const planeMaterial = new THREE.MeshBasicMaterial({color: 0xAAAAAA, side: THREE.DoubleSide});
-        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-        plane.rotation.x = -0.5 * Math.PI;
-        plane.scale.multiplyScalar(30);
-        this.scene.add(plane);*/
-
-        var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(10000, 10000), new THREE.MeshPhongMaterial({
+        this.setBackground(new THREE.MeshPhongMaterial({
             color: 0x999999,
             depthWrite: false
         }));
-        mesh.rotation.x = -Math.PI / 2;
-        mesh.receiveShadow = true;
-        this.scene.add(mesh);
+        this.setColliders(new THREE.BoxGeometry(500, 400, 500),
+            new THREE.MeshBasicMaterial({color: 0x222222, wireframe: true}));
 
-        var grid = new THREE.GridHelper(5000, 40, 0x000000, 0x000000);
-        grid.material.opacity = 0.2;
-        grid.material.transparent = true;
-        this.scene.add(grid);
-
-        const geometry = new THREE.BoxGeometry(500, 400, 500);
-        const material = new THREE.MeshBasicMaterial({color: 0x222222, wireframe: true});
-
-        this.colliders = [];
-
-        for (let x = -5000; x < 5000; x += 1000) {
-            for (let z = -5000; z < 5000; z += 1000) {
-                if (x == 0 && z == 0) continue;
-                const box = new THREE.Mesh(geometry, material);
-                box.position.set(x, 250, z);
-                this.scene.add(box);
-                this.colliders.push(box);
-            }
-        }
-
-        const geometry2 = new THREE.BoxGeometry(1000, 40, 1000);
-        const stage = new THREE.Mesh(geometry2, material);
-        stage.position.set(0, 20, 0);
-        this.colliders.push(stage);
-        this.scene.add(stage);
-
-        /*//terrain 모델
-        const gltfLoader = new GLTFLoader();
-        gltfLoader.load('./model/terrain.glb', (gltf) => {
-            this.terrain = gltf.scene.children[ 0 ];
-            this.terrain.material = new THREE.MeshNormalMaterial();
-            this.terrain.scale.multiplyScalar( 80 );
-            this.scene.add( this.terrain );
-        });*/
-
-
-        //
         this._render(1);
     }
 
@@ -120,8 +74,47 @@ class App {
         requestAnimationFrame(this._render.bind(this));
     }
 
-    setBackground(texture) {
-        this.scene.background = texture;
+    setBackground(material) {
+        if (this.grid) {
+            this.scene.remove(this.grid);
+        }
+        var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(10000, 10000), material);
+        mesh.rotation.x = -Math.PI / 2;
+        mesh.receiveShadow = true;
+        this.scene.add(mesh);
+
+        this.grid = new THREE.GridHelper(5000, 40, 0x000000, 0x000000);
+        this.grid.material.opacity = 0.2;
+        this.grid.material.transparent = true;
+        this.scene.add(this.grid);
+    }
+
+    setColliders(newGeometry, newMaterial) {
+        if (this.stage) {
+            this.scene.remove(this.stage);
+        }
+        const geometry = newGeometry;
+        const material = newMaterial;
+
+        this.colliders = [];
+
+        for (let x = -5000; x < 5000; x += 1000) {
+            for (let z = 0; z < 5000; z += 1000) {
+                if (x == 0 && z == 0) continue;
+                const box = new THREE.Mesh(geometry, material);
+                box.position.set(x, 250, z);
+                this.scene.add(box);
+                this.colliders.push(box);
+            }
+        }
+
+        const geometry2 = new THREE.BoxGeometry(1000, 40, 1000);
+        const stage = new THREE.Mesh(geometry2, material);
+        stage.position.set(0, 20, 0);
+        this.colliders.push(stage);
+
+        this.stage = stage;
+        this.scene.add(this.stage);
     }
 
     setHero(hero) {
@@ -211,7 +204,7 @@ class Hero {
             mixer.addEventListener('loop', _ => {
                 if (this.curAnimation === walkAction) {
                     this.model.translateZ(50);
-                    if (++this.walkCount > 4) {
+                    if (++this.walkCount > 6) {
                         app.control.autoRotate = false;
                         walkAction.fadeOut(0.5);
                         this.changeAnimation('IDLE');
@@ -228,8 +221,6 @@ class Hero {
 
         const previousAnimationAction = this.curAnimation;
         this.curAnimation = this.animations[name];
-
-
 
         if (previousAnimationAction !== this.curAnimation) {
             //this.mixer.stopAllAction();
