@@ -228,6 +228,9 @@ class App {
         if (!this.monster) {
             return;
         }
+        let scalar = Math.pow(0.999, this.count);
+        this.monster.model.scale.multiplyScalar(scalar);
+        this.monster.model.rotation.y -= Math.PI;
         this.count = 0;
         let monster = this.monster;
         app.scene.remove(monster.model);
