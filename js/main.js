@@ -215,13 +215,13 @@ class Hero {
     walkCount = 0;
 
     constructor(modelPath, onModelLoaded) {
-        const fbxLoader = new GLTFLoader();
-        fbxLoader.load(modelPath, (fbx) => {
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.load(modelPath, (gltf) => {
             this.model = new THREE.Object3D();
-            this.model.add(fbx.scene);
+            this.model.add(gltf.scene);
 
             // load model
-            fbx.scene.traverse(child => {
+            gltf.scene.traverse(child => {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
@@ -239,23 +239,23 @@ class Hero {
             });
 
             // model animation
-            const mixer = new THREE.AnimationMixer(fbx.scene);
+            const mixer = new THREE.AnimationMixer(gltf.scene);
 
-            fbx.mixer = mixer;
+            gltf.mixer = mixer;
             this.mixer = mixer;
 
             this.animations = {};
-            console.log(fbx.animations);
+            console.log(gltf.animations);
 
-            const attackAction = fbx.mixer.clipAction(fbx.animations[2]);
+            const attackAction = gltf.mixer.clipAction(gltf.animations[2]);
             attackAction.setLoop(THREE.LoopOnce);
             attackAction.setDuration(0.7);
             this.animations['ATTACK'] = attackAction;
 
-            const idleAction = fbx.mixer.clipAction(fbx.animations[3]);
+            const idleAction = gltf.mixer.clipAction(gltf.animations[3]);
             this.animations['IDLE'] = idleAction;
 
-            const walkAction = fbx.mixer.clipAction(fbx.animations[0]);
+            const walkAction = gltf.mixer.clipAction(gltf.animations[0]);
             walkAction.setDuration(2);
             this.animations['WALK'] = walkAction;
 
@@ -312,16 +312,16 @@ class Hero {
 class Monster {
     prevAnimationTick = 0;
 
-    constructor(modelPath, onModelLoaded, hp, bgmaterial) {
-        const fbxLoader = new GLTFLoader();
-        fbxLoader.load(modelPath, (fbx) => {
-            fbx.scene.position.y = 68;
+    constructor(modelPath, onModelLoaded, hit, bgmaterial) {
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.load(modelPath, (gltf) => {
+            gltf.scene.position.y = 68;
 
             this.model = new THREE.Object3D();
-            this.model.add(fbx.scene);
+            this.model.add(gltf.scene);
 
             // load model
-            fbx.scene.traverse(child => {
+            gltf.scene.traverse(child => {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
@@ -334,9 +334,12 @@ class Monster {
             });
 
             // 몬스터 체력바
-            this.hp = hp;
+            this.hit = hit;
+            this.hit_count = 0;
+            this.bleed = hit/10;
+            this.hp = 150;
             const geometry = new THREE.BoxGeometry(this.hp, 10, 10);
-            const material = new THREE.MeshMatcapMaterial({color: 0x00ff00});
+            const material = new THREE.MeshMatcapMaterial({color: 0xffffff});
             const cube = new THREE.Mesh(geometry, material);
             cube.position.set(1, 155, 1);
             this.HPbar = cube;
@@ -346,25 +349,30 @@ class Monster {
             this.coldMaterial =  new THREE.MeshBasicMaterial({color: bgmaterial.color, wireframe: true})
 
             // 애니메이션
-            const mixer = new THREE.AnimationMixer(fbx.scene);
+            const mixer = new THREE.AnimationMixer(gltf.scene);
             mixer.addEventListener('finished', _ => {
                 this.changeAnimation('IDLE');
-                this.hp -= 10;
+                if (++this.hit_count % this.bleed == 0){
+                    this.hp -= 15;
+                    console.log("hp "+this.hp+", hit_count "+this.hit_count);
+                }
                 if (this.hp <= 0) {
                     app.removeMonster();
+                    this.hp = 150;
+                    this.hit_count = 0;
                     return;
                 }
                 this.HPbar.geometry = new THREE.BoxGeometry(this.hp, 10, 10);
                 this.HPbar.geometry.needsUpdate = true;
             });
 
-            fbx.mixer = mixer;
+            gltf.mixer = mixer;
             this.mixer = mixer;
 
             this.animations = {};
-            console.log(fbx.animations);
+            console.log(gltf.animations);
 
-            fbx.animations.forEach(clip => {
+            gltf.animations.forEach(clip => {
                const name = clip.name;
                this.animations[name] = mixer.clipAction(clip);
             });
