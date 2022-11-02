@@ -2,7 +2,6 @@ import * as THREE from "https://cdn.skypack.dev/three@0.132.2";
 import {OrbitControls} from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
 import {GLTFLoader} from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
 
-
 const ACTION_ATTACK = "Slash10";
 const ACTION_ATTACK2 = "Slash20";
 const ACTION_IDLE = "StandingIdle0";
@@ -72,9 +71,9 @@ class App {
 
     _initHeroes() {
         this.heroes = {};
-        new Hero('./model/hero/Axe_edited.glb', h => { this.heroes[HERO_AXE] = h });
-        new Hero('./model/hero/Katana_edited(3).glb', h => { this.heroes[HERO_KATANA] = h; });
-        new Hero('./model/hero/Sword_edited.glb', h => { this.heroes[HERO_SWORD] = h; });
+        new Hero('./model/hero/Axe.glb', h => { this.heroes[HERO_AXE] = h });
+        new Hero('./model/hero/Katana.glb', h => { this.heroes[HERO_KATANA] = h; });
+        new Hero('./model/hero/Sword.glb', h => { this.heroes[HERO_SWORD] = h; });
         console.log(this.heroes);
     }
 
