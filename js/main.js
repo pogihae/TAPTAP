@@ -59,6 +59,12 @@ class App {
         this.setColliders(new THREE.BoxGeometry(500, 400, 500),
             new THREE.MeshBasicMaterial({color: 0x222222, wireframe: true}));
 
+        this.monsters = [];
+        new Monster('./model/monster.fbx', m => {this.monsters.push(m)});
+        new Monster('./model/pack_edited.fbx', m => {this.monsters.push(m)});
+
+        this.monsterIdx = 0;
+
         this._render(1);
     }
 
@@ -145,6 +151,26 @@ class App {
         this.scene.add(this.monster.model);
         this.scene.add(this.monster.HPbar);
     }
+
+    removeMonster() {
+        if (!this.monster || this.monsters.length < 2) {
+            alert("Not ready!!")
+            return;
+        }
+        let monster = this.monster;
+        app.scene.remove(monster.model);
+        app.scene.remove(monster.HPbar);
+
+        this.monsterIdx += 1;
+        this.monsterIdx %= this.monsters.length;
+
+        this.setMonster(this.monsters[this.monsterIdx]);
+
+        window.onclick = function () {
+            app.hero.changeAnimation('ATTACK');
+            app.monster.changeAnimation('HIT_REACTION');
+        }
+    }
 }
 
 class Hero {
@@ -208,15 +234,10 @@ class Hero {
             mixer.addEventListener('loop', _ => {
                 if (this.curAnimation === walkAction) {
                     this.model.translateZ(50);
-                    if (++this.walkCount > 6) {
+                    if (++this.walkCount > 5) {
                         app.control.autoRotate = false;
                         walkAction.fadeOut(0.5);
                         this.changeAnimation('IDLE');
-
-                        window.onclick = function () {
-                            hero.changeAnimation('ATTACK');
-                            monster.changeAnimation('HIT_REACTION');
-                        }
                     }
                 }
             });
@@ -270,7 +291,8 @@ class Monster {
             });
 
             // 몬스터 체력바
-            const geometry = new THREE.BoxGeometry(150, 10, 10);
+            this.hp = 100;
+            const geometry = new THREE.BoxGeometry(this.hp, 10, 10);
             const material = new THREE.MeshMatcapMaterial({color: 0x123456});
             const cube = new THREE.Mesh(geometry, material);
             cube.position.set(1, 155, 1);
@@ -280,8 +302,12 @@ class Monster {
             const mixer = new THREE.AnimationMixer(fbx);
             mixer.addEventListener('finished', _ => {
                 this.changeAnimation('IDLE');
-                this.HPbar.material.color = new THREE.Color(0xffffff * Math.random());
-                this.HPbar.material.needsUpdate = true;
+                this.hp -= 10;
+                if (this.hp <= 0) {
+                    app.removeMonster();
+                }
+                this.HPbar.geometry = new THREE.BoxGeometry(this.hp, 10, 10);
+                this.HPbar.geometry.needsUpdate = true;
             });
 
             fbx.mixer = mixer;
@@ -306,6 +332,7 @@ class Monster {
     }
 
     changeAnimation(name) {
+        console.log("change Animation to " + name);
         if (!this.animations) return;
 
         const previousAnimationAction = this.curAnimation;
@@ -337,5 +364,10 @@ window.onload = function () {
         app.setMonster(monster);
     });
 
+
+    window.onclick = function () {
+        hero.changeAnimation('ATTACK');
+        monster.changeAnimation('HIT_REACTION');
+    }
 
 }
