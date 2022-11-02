@@ -55,34 +55,38 @@ class App {
         this.setColliders(new THREE.BoxGeometry(500, 400, 500),
             new THREE.MeshBasicMaterial({color: 0x222222, wireframe: true}));
 
+        this.heros = [];
+        new Hero('./model/hero/katana_pack.fbx', h => {this.heros.push(h);});
+        new Hero('./model/hero/ax_pack.fbx', h => {this.heros.push(h);});
+
         this.monsters = [];
         //new Monster('./model/monster_doozy.glb', m => {this.monsters.push(m)});
-        new Monster('./model/monster_guard.glb', m => {
+        new Monster('./model/monster/monster_guard.glb', m => {
                 this.monsters.push(m)
             }, 10,
             new THREE.MeshPhongMaterial({
                 color: 0x000089,
                 depthWrite: false
             }));
-        new Monster('./model/monster_maskman.glb', m => {
+        new Monster('./model/monster/monster_maskman.glb', m => {
             this.monsters.push(m)
         }, 20, new THREE.MeshPhongMaterial({
             color: 0x00ffff,
             depthWrite: false
         }));
-        new Monster('./model/monster_mouse.glb', m => {
+        new Monster('./model/monster/monster_mouse.glb', m => {
             this.monsters.push(m)
         }, 30, new THREE.MeshPhongMaterial({
             color: 0xff0000,
             depthWrite: false
         }));
-        new Monster('./model/monster_rabbit.glb', m => {
+        new Monster('./model/monster/monster_rabbit.glb', m => {
             this.monsters.push(m)
         }, 40, new THREE.MeshPhongMaterial({
             color: 0x001000,
             depthWrite: false
         }));
-        new Monster('./model/monster_zombie.glb', m => {
+        new Monster('./model/monster/monster_zombie.glb', m => {
             this.monsters.push(m)
         }, 50, new THREE.MeshPhongMaterial({
             color: 0x00f500,
@@ -273,6 +277,7 @@ class Hero {
 
             mixer.addEventListener('loop', _ => {
                 if (this.curAnimation === walkAction) {
+                    document.onclick = function () {};
                     this.model.translateZ(50);
                     if (++this.walkCount > 4) {
                         app.control.autoRotate = false;
@@ -281,6 +286,11 @@ class Hero {
                         walkAction.fadeOut(0.5);
                         gamestart.className = "hide";
                         this.changeAnimation(ACTION_IDLE);
+
+                        document.onclick = function () {
+                            app.hero.changeAnimation(ACTION_ATTACK);
+                            app.monster.changeAnimation('HIT_REACTION');
+                        }
                     }
                 }
             });
@@ -418,19 +428,24 @@ window.onload = function () {
     app = new App(function () {
 
     });
-    const hero = new Hero('./model/finished.glb', hero => {
+    const hero = new Hero('./model/hero/finished.glb', hero => {
         app.setHero(hero);
     });
-    const monster = new Monster('./model/monster_doozy.glb', monster => {
+    const monster = new Monster('./model/monster/monster_doozy.glb', monster => {
         app.setMonster(monster);
     }, 10, new THREE.MeshPhongMaterial({
         color: 0x00f000,
         depthWrite: false
     }));
 
-    document.onclick = function () {
-        hero.changeAnimation(ACTION_ATTACK);
-        monster.changeAnimation('HIT_REACTION');
+    document.getElementById('toSword').onclick = function() {
+
+    }
+    document.getElementById('toAxe').onclick = function() {
+
+    }
+    document.getElementById('toKatana').onclick = function() {
+
     }
 
 }
