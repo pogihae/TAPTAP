@@ -212,6 +212,11 @@ class Hero {
                         app.control.autoRotate = false;
                         walkAction.fadeOut(0.5);
                         this.changeAnimation('IDLE');
+
+                        window.onclick = function () {
+                            hero.changeAnimation('ATTACK');
+                            monster.changeAnimation('HIT_REACTION');
+                        }
                     }
                 }
             });
@@ -332,8 +337,5 @@ window.onload = function () {
         app.setMonster(monster);
     });
 
-    window.onclick = function () {
-        hero.changeAnimation('ATTACK');
-        monster.changeAnimation('HIT_REACTION');
-    }
+
 }
