@@ -61,24 +61,34 @@ class App {
 
         this.monsters = [];
         //new Monster('./model/monster_doozy.glb', m => {this.monsters.push(m)});
-        new Monster('./model/monster_guard.glb', m => {this.monsters.push(m)}, 10,
+        new Monster('./model/monster_guard.glb', m => {
+                this.monsters.push(m)
+            }, 10,
             new THREE.MeshPhongMaterial({
-            color: 0x000089,
-            depthWrite: false
-        }));
-        new Monster('./model/monster_maskman.glb', m => {this.monsters.push(m)}, 20,new THREE.MeshPhongMaterial({
+                color: 0x000089,
+                depthWrite: false
+            }));
+        new Monster('./model/monster_maskman.glb', m => {
+            this.monsters.push(m)
+        }, 20, new THREE.MeshPhongMaterial({
             color: 0x00ffff,
             depthWrite: false
         }));
-        new Monster('./model/monster_mouse.glb', m => {this.monsters.push(m)}, 30,new THREE.MeshPhongMaterial({
+        new Monster('./model/monster_mouse.glb', m => {
+            this.monsters.push(m)
+        }, 30, new THREE.MeshPhongMaterial({
             color: 0xff0000,
             depthWrite: false
         }));
-        new Monster('./model/monster_rabbit.glb', m => {this.monsters.push(m)}, 40,new THREE.MeshPhongMaterial({
+        new Monster('./model/monster_rabbit.glb', m => {
+            this.monsters.push(m)
+        }, 40, new THREE.MeshPhongMaterial({
             color: 0x001000,
             depthWrite: false
         }));
-        new Monster('./model/monster_zombie.glb', m => {this.monsters.push(m)}, 50,new THREE.MeshPhongMaterial({
+        new Monster('./model/monster_zombie.glb', m => {
+            this.monsters.push(m)
+        }, 50, new THREE.MeshPhongMaterial({
             color: 0x00f500,
             depthWrite: false
         }));
@@ -124,7 +134,7 @@ class App {
     setColliders(newGeometry, newMaterial) {
         if (this.stage) {
             this.scene.remove(this.stage);
-            for (let i=0; i<this.colliders.length; i++) {
+            for (let i = 0; i < this.colliders.length; i++) {
                 this.scene.remove(this.colliders[i]);
             }
         }
@@ -204,7 +214,7 @@ class App {
         this.setMonster(this.monsters[this.monsterIdx]);
 
         window.onclick = function () {
-            app.hero.changeAnimation('ATTACK');
+            app.hero.changeAnimation('Attack0');
             app.monster.changeAnimation('HIT_REACTION');
         }
     }
@@ -246,25 +256,26 @@ class Hero {
 
             this.animations = {};
             console.log(fbx.animations);
+            fbx.animations.forEach(clip => {
+                const name = clip.name;
+                this.animations[name] = mixer.clipAction(clip);
+            });
 
-            const attackAction = fbx.mixer.clipAction(fbx.animations[2]);
+            const attackAction = this.animations['Attack0']
             attackAction.setLoop(THREE.LoopOnce);
             attackAction.setDuration(0.7);
-            this.animations['ATTACK'] = attackAction;
 
-            const idleAction = fbx.mixer.clipAction(fbx.animations[3]);
-            this.animations['IDLE'] = idleAction;
+            const idleAction = this.animations['StandingIdle0'];
 
-            const walkAction = fbx.mixer.clipAction(fbx.animations[0]);
+            const walkAction = this.animations['WalkForward0']
             walkAction.setDuration(2);
-            this.animations['WALK'] = walkAction;
 
             this.curAnimation = walkAction;
             walkAction.play();
 
             mixer.addEventListener('finished', _ => {
                 if (this.curAnimation === attackAction) {
-                    this.changeAnimation('IDLE');
+                    this.changeAnimation('StandingIdle0');
                 }
             });
 
@@ -277,7 +288,7 @@ class Hero {
                         app.camera.updateProjectionMatrix();
                         walkAction.fadeOut(0.5);
                         gamestart.className = "hide";
-                        this.changeAnimation('IDLE');
+                        this.changeAnimation('StandingIdle0');
                     }
                 }
             });
@@ -343,7 +354,7 @@ class Monster {
 
             this.bgMaterial = bgmaterial;
 
-            this.coldMaterial =  new THREE.MeshBasicMaterial({color: bgmaterial.color, wireframe: true})
+            this.coldMaterial = new THREE.MeshBasicMaterial({color: bgmaterial.color, wireframe: true})
 
             // 애니메이션
             const mixer = new THREE.AnimationMixer(fbx.scene);
@@ -365,8 +376,8 @@ class Monster {
             console.log(fbx.animations);
 
             fbx.animations.forEach(clip => {
-               const name = clip.name;
-               this.animations[name] = mixer.clipAction(clip);
+                const name = clip.name;
+                this.animations[name] = mixer.clipAction(clip);
             });
 
             const attackAction = this.animations['HIT_REACTION'];
@@ -412,10 +423,10 @@ window.onload = function () {
     gamestart = document.getElementById('gamestartInstructions');
     gamestart.className = "show";
 
-    app = new App( function() {
+    app = new App(function () {
 
     });
-    const hero = new Hero('./model/finished.glb',hero => {
+    const hero = new Hero('./model/finished.glb', hero => {
         app.setHero(hero);
     });
     const monster = new Monster('./model/monster_doozy.glb', monster => {
@@ -426,7 +437,7 @@ window.onload = function () {
     }));
 
     window.onclick = function () {
-        hero.changeAnimation('ATTACK');
+        hero.changeAnimation('Attack0');
         monster.changeAnimation('HIT_REACTION');
     }
 
