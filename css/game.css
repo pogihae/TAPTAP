@@ -29,17 +29,17 @@
     user-select: none
 }
 
-#button1 {
+#toSword {
     right: 1vmax;
     top: 1vmin;
 }
 
-#button2 {
+#toAxe {
     right: 1vmax;
     top: 11vmin;
 }
 
-#button3 {
+#toKatana {
     right: 1vmax;
     top: 21vmin;
 }
