@@ -3,8 +3,8 @@ import {OrbitControls} from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/
 import {GLTFLoader} from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
 
 
-const ACTION_ATTACK = "Attack0";
-const ACTION_ATTACK2 = "Doubleslash0";
+const ACTION_ATTACK = "Slash10";
+const ACTION_ATTACK2 = "Slash20";
 const ACTION_IDLE = "StandingIdle0";
 const ACTION_WALK = "WalkForward0";
 
@@ -66,15 +66,16 @@ class App {
         this._initHeroes();
         this._initMonsters(onLoaded);
 
+        this.count = 0;
         this._render(1);
     }
 
     _initHeroes() {
         this.heroes = {};
-        new Hero('./model/hero/medievadsdsl_axe_02.glb', h => { this.heroes[HERO_AXE] = h });
-        // TODO fbx to glb
-        //new Hero('./model/hero/katana_pack.fbx', h => { this.heroes[HERO_KATANA] = h; });
-        new Hero('./model/hero/finished.glb', h => { this.heroes[HERO_SWORD] = h; });
+        new Hero('./model/hero/Axe_edited.glb', h => { this.heroes[HERO_AXE] = h });
+        new Hero('./model/hero/Katana_edited(3).glb', h => { this.heroes[HERO_KATANA] = h; });
+        new Hero('./model/hero/Sword_edited.glb', h => { this.heroes[HERO_SWORD] = h; });
+        console.log(this.heroes);
     }
 
     _initMonsters(onLoaded) {
@@ -123,6 +124,12 @@ class App {
             this.hero.updateAnimation(time);
         }
         if (this.monster) {
+            this.count += 1;
+            if (this.count > 1000) {
+                gameOver();
+                return;
+            }
+            this.monster.model.scale.multiplyScalar(1.001);
             this.monster.updateAnimation(time);
         }
         this.control.update();
@@ -181,10 +188,14 @@ class App {
 
     setHero(hero) {
         if (this.hero) {
-            this.scene.remove(this.hero.model);
-            this.hero = null;
+            let toRemove = this.hero.model;
+            this.hero.model.position.y -= 100;
+            this.hero.model.position.z = 100;
+            this.scene.remove(toRemove);
         }
         this.hero = this.heroes[hero];
+        console.log(hero + " " + this.hero)
+        console.log(this.heroes);
         this.hero.model.position.y += 100;
         this.hero.model.position.z -= 560;
         this.scene.add(this.hero.model);
@@ -218,6 +229,7 @@ class App {
         if (!this.monster) {
             return;
         }
+        this.count = 0;
         let monster = this.monster;
         app.scene.remove(monster.model);
         app.scene.remove(monster.HPbar);
@@ -266,6 +278,7 @@ class Hero {
             this.mixer = mixer;
 
             this.animations = {};
+            console.log(modelPath+" \n");
             console.log(fbx.animations);
             fbx.animations.forEach(clip => {
                 const name = clip.name;
@@ -278,11 +291,12 @@ class Hero {
             const attackAction2 = this.animations[ACTION_ATTACK2]
             attackAction2.setLoop(THREE.LoopOnce);
             attackAction2.setDuration(0.7);
+            const idleAction = this.animations[ACTION_IDLE];
             const walkAction = this.animations[ACTION_WALK]
             walkAction.setDuration(2);
 
-            this.curAnimation = walkAction;
-            walkAction.play();
+            this.curAnimation = idleAction;
+            idleAction.play();
 
             mixer.addEventListener('finished', _ => {
                 if (this.curAnimation === attackAction) {
@@ -304,6 +318,7 @@ class Hero {
                         gamestart.className = "hide";
                         this.changeAnimation(ACTION_IDLE);
 
+                        console.log("WALKEND: " + this.model.position.z)
                         document.onclick = function () {
                             docOnclick();
                         }
@@ -434,6 +449,13 @@ class Monster {
     }
 }
 
+function gameOver() {
+    document.getElementById('gameoverInstructions').className = "show";
+    document.onclick = function () {
+        
+    }
+}
+
 function docOnclick() {
     if (isSlash) {
         app.hero.changeAnimation(ACTION_ATTACK);
@@ -450,9 +472,10 @@ window.onload = function () {
     gamestart.className = "show";
 
     app = new App(function () {
-        app.setHero(HERO_AXE);
+        app.setHero(HERO_KATANA);
         new Monster('./model/monster/monster_doozy.glb', monster => {
             app.setMonster(monster);
+            app.hero.changeAnimation(ACTION_WALK);
         }, 10, new THREE.MeshPhongMaterial({color: 0x00f000}));
     });
 
