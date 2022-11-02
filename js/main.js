@@ -1,7 +1,11 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.132.2";
 import {OrbitControls} from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
 import {GLTFLoader} from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
-import {FBXLoader} from "https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/FBXLoader.js";
+
+
+const ACTION_ATTACK = "Attack0";
+const ACTION_IDLE = "StandingIdle0";
+const ACTION_WALK = "WalkForward0";
 
 class App {
 
@@ -26,13 +30,6 @@ class App {
         this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000);
         this.camera.position.set(0, 500, 1000);
 
-        // light
-        /*const color = 0xffffff;
-        const intensity = 5;
-        const light = new THREE.DirectionalLight(color, intensity);
-        light.position.set(0, 500, -1000);
-        this.scene.add(light);*/
-
         let light = new THREE.HemisphereLight(0xffffff, 0x444444);
         light.position.set(0, 200, 0);
         this.scene.add(light);
@@ -50,7 +47,6 @@ class App {
 
         // control
         this.control = new OrbitControls(this.camera, this.container);
-        //this.control.autoRotate = true;
 
         this.setBackground(new THREE.MeshPhongMaterial({
             color: 0x999999,
@@ -145,7 +141,7 @@ class App {
 
         for (let x = -5000; x < 5000; x += 1000) {
             for (let z = 0; z < 5000; z += 1000) {
-                if (x == 0 && z == 0) continue;
+                if (x === 0 && z === 0) continue;
                 const box = new THREE.Mesh(geometry, material);
                 box.position.set(x, 250, z);
                 this.scene.add(box);
@@ -185,10 +181,9 @@ class App {
         //this.monster.position.y = 68;
 
         this.mesh.material = this.monster.bgMaterial;
-        const material = new THREE.MeshStandardMaterial({
+        this.mesh.material = new THREE.MeshStandardMaterial({
             metalness: 1,
         });
-        this.mesh.material = material;
         this.mesh.material.needsUpdate = true;
 
         this.colliders.forEach(c => {
@@ -200,7 +195,7 @@ class App {
         this.scene.add(this.monster.HPbar);
     }
 
-    removeMonster() {
+    nextMonster() {
         if (!this.monster) {
             return;
         }
@@ -213,8 +208,8 @@ class App {
 
         this.setMonster(this.monsters[this.monsterIdx]);
 
-        window.onclick = function () {
-            app.hero.changeAnimation('Attack0');
+        document.onclick = function () {
+            app.hero.changeAnimation(ACTION_ATTACK);
             app.monster.changeAnimation('HIT_REACTION');
         }
     }
@@ -261,13 +256,10 @@ class Hero {
                 this.animations[name] = mixer.clipAction(clip);
             });
 
-            const attackAction = this.animations['Attack0']
+            const attackAction = this.animations[ACTION_ATTACK]
             attackAction.setLoop(THREE.LoopOnce);
             attackAction.setDuration(0.7);
-
-            const idleAction = this.animations['StandingIdle0'];
-
-            const walkAction = this.animations['WalkForward0']
+            const walkAction = this.animations[ACTION_WALK]
             walkAction.setDuration(2);
 
             this.curAnimation = walkAction;
@@ -275,20 +267,20 @@ class Hero {
 
             mixer.addEventListener('finished', _ => {
                 if (this.curAnimation === attackAction) {
-                    this.changeAnimation('StandingIdle0');
+                    this.changeAnimation(ACTION_IDLE);
                 }
             });
 
             mixer.addEventListener('loop', _ => {
                 if (this.curAnimation === walkAction) {
                     this.model.translateZ(50);
-                    if (++this.walkCount > 5) {
+                    if (++this.walkCount > 4) {
                         app.control.autoRotate = false;
-                        app.camera.zoom = 3;
+                        app.camera.zoom = 2.5;
                         app.camera.updateProjectionMatrix();
                         walkAction.fadeOut(0.5);
                         gamestart.className = "hide";
-                        this.changeAnimation('StandingIdle0');
+                        this.changeAnimation(ACTION_IDLE);
                     }
                 }
             });
@@ -347,7 +339,7 @@ class Monster {
             // 몬스터 체력바
             this.hp = hp;
             const geometry = new THREE.BoxGeometry(this.hp, 10, 10);
-            const material = new THREE.MeshMatcapMaterial({color: 0x00ff00});
+            const material = new THREE.MeshBasicMaterial({});
             const cube = new THREE.Mesh(geometry, material);
             cube.position.set(1, 155, 1);
             this.HPbar = cube;
@@ -362,7 +354,7 @@ class Monster {
                 this.changeAnimation('IDLE');
                 this.hp -= 10;
                 if (this.hp <= 0) {
-                    app.removeMonster();
+                    app.nextMonster();
                     return;
                 }
                 this.HPbar.geometry = new THREE.BoxGeometry(this.hp, 10, 10);
@@ -416,8 +408,8 @@ class Monster {
     }
 }
 
-var app;
-var gamestart;
+let app;
+let gamestart;
 
 window.onload = function () {
     gamestart = document.getElementById('gamestartInstructions');
@@ -436,8 +428,8 @@ window.onload = function () {
         depthWrite: false
     }));
 
-    window.onclick = function () {
-        hero.changeAnimation('Attack0');
+    document.onclick = function () {
+        hero.changeAnimation(ACTION_ATTACK);
         monster.changeAnimation('HIT_REACTION');
     }
 
