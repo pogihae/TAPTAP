@@ -6,6 +6,7 @@ const ACTION_ATTACK = "Slash10";
 const ACTION_ATTACK2 = "Slash20";
 const ACTION_IDLE = "StandingIdle0";
 const ACTION_WALK = "WalkForward0";
+const ACTION_RAGE = "Rage0";
 const ACTION_FINISH = "Finish0";
 
 const HERO_SWORD = "HERO_SWORD";
@@ -14,6 +15,7 @@ const HERO_KATANA = "HERO_KATANA";
 
 let app;
 let gamestart;
+let gamefinish = false;
 let isSlash = true;
 
 class App {
@@ -91,27 +93,27 @@ class App {
                 depthWrite: false
             }));
         new Monster('./model/monster/monster_maskman.glb', m => {
-            this.monsters.push(m)
-        }, 20, new THREE.MeshPhongMaterial({
+            //this.monsters.push(m)
+        }, 10, new THREE.MeshPhongMaterial({
             color: 0x00ffff,
             depthWrite: false
         }));
         new Monster('./model/monster/monster_mouse.glb', m => {
-            this.monsters.push(m)
-        }, 30, new THREE.MeshPhongMaterial({
+            //this.monsters.push(m)
+        }, 10, new THREE.MeshPhongMaterial({
             color: 0xff0000,
             depthWrite: false
         }));
         new Monster('./model/monster/monster_rabbit.glb', m => {
-            this.monsters.push(m)
-        }, 40, new THREE.MeshPhongMaterial({
+            //this.monsters.push(m)
+        }, 10, new THREE.MeshPhongMaterial({
             color: 0x001000,
             depthWrite: false
         }));
         new Monster('./model/monster/monster_zombie.glb', m => {
-                this.monsters.push(m);
+                //this.monsters.push(m);
                 onLoaded()},
-            50,
+            10,
             new THREE.MeshPhongMaterial({
                 color: 0x00f500,
                 depthWrite: false
@@ -121,6 +123,7 @@ class App {
     }
 
     _render(time) {
+        if (gamefinish) return;
         this.renderer.render(this.scene, this.camera);
         if (this.hero) {
             this.hero.updateAnimation(time);
@@ -131,7 +134,7 @@ class App {
             this.maximum = 2200;
             this.minimum = 1000;
             this.countEnd = this.monster.hit*100*0.75
-            
+
             if (this.count > clampNumber(this.countEnd, this.minimum, this.maximum)) {
                 gameOver();
                 console.log(this.count);
@@ -234,7 +237,7 @@ class App {
     }
 
     nextMonster() {
-        if (!this.monster) {
+        if (!this.monster || this.isLastMonster()) {
             return;
         }
         let scalar = Math.pow(0.999, this.count);
@@ -246,11 +249,15 @@ class App {
         app.scene.remove(monster.HPbar);
 
         this.monsterIdx += 1;
-        this.monsterIdx %= this.monsters.length;
+        //this.monsterIdx %= this.monsters.length;
 
         this.setMonster(this.monsters[this.monsterIdx]);
 
         document.onclick = function() { docOnclick(); }
+    }
+
+    isLastMonster() {
+        return this.monsterIdx === this.monsters.length - 1;
     }
 }
 
@@ -307,6 +314,7 @@ class Hero {
             const idleAction = this.animations[ACTION_IDLE];
             const walkAction = this.animations[ACTION_WALK]
             walkAction.setDuration(2);
+            this.walkAction = walkAction;
 
             const finishAction = this.animations[ACTION_FINISH];
             finishAction.setLoop(THREE.LoopOnce);
@@ -318,33 +326,18 @@ class Hero {
 
             mixer.addEventListener('finished', _ => {
 
-                if (this.curAnimation === attackAction || this.curAnimation === finishAction) {
+                if (this.curAnimation === attackAction) {
                     app.camera.zoom = 1.5;
                     app.camera.updateProjectionMatrix();
                     this.changeAnimation(ACTION_IDLE);
+                } else if (this.curAnimation === finishAction) {
+                    gameFinish();
                 }
             });
 
             mixer.addEventListener('loop', _ => {
                 if (this.curAnimation === walkAction) {
-                    app.control.autoRotate = true;
-                    app.control.autoRotateSpeed = 9.0;
-
-                    document.onclick = function () {};
-                    this.model.translateZ(50);
-                    if (++this.walkCount > 4) {
-                        app.control.autoRotate = false;
-                        app.camera.zoom = 1.5;
-                        app.camera.updateProjectionMatrix();
-                        walkAction.fadeOut(0.5);
-                        gamestart.className = "hide";
-                        this.changeAnimation(ACTION_IDLE);
-
-                        console.log("WALKEND: " + this.model.position.z + " " + this.model.position.y)
-                        document.onclick = function () {
-                            docOnclick();
-                        }
-                    }
+                    this.walk();
                 }
             });
 
@@ -378,6 +371,26 @@ class Hero {
             this.mixer.update(deltaTime);
         }
         this.prevAnimationTick = time;
+    }
+
+    walk() {
+        app.control.autoRotate = true;
+        app.control.autoRotateSpeed = 7.0;
+        document.onclick = function () {};
+        this.model.translateZ(50);
+        if (++this.walkCount > 5) {
+            app.control.autoRotate = false;
+            app.camera.zoom = 2.5;
+            app.camera.updateProjectionMatrix();
+            this.walkAction.fadeOut(0.5);
+            gamestart.className = "hide";
+            this.changeAnimation(ACTION_IDLE);
+
+            console.log("WALKEND: " + this.model.position.z)
+            document.onclick = function () {
+                docOnclick();
+            }
+        }
     }
 }
 
@@ -436,6 +449,12 @@ class Monster {
                     this.hit_count = 0;
                     return;
                 }
+
+                if (this.hp <= 15 && app.isLastMonster()) {
+                    gamefinish = true;
+                }
+
+                //this.HPbar.geometry = new THREE.BoxGeometry(this.hp, 10, 10);
                 this.HPbar.geometry = new THREE.BoxGeometry(10, this.hp, 10);
                 this.HPbar.geometry.needsUpdate = true;
             });
@@ -494,11 +513,18 @@ function gameOver() {
     }
 }
 
+function gameFinish() {
+    alert("FINISH");
+}
+
 function docOnclick() {
-    if (isSlash && !app.monsterIdx.nextFinish) {
-        app.hero.changeAnimation(ACTION_ATTACK);
-    } else if (app.monster.nextFinish) {
+    if (gamefinish) {
         app.hero.changeAnimation(ACTION_FINISH);
+        return;
+    }
+
+    if (isSlash) {
+        app.hero.changeAnimation(ACTION_ATTACK);
     } else {
         app.hero.changeAnimation(ACTION_ATTACK2);
     }
