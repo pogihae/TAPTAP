@@ -1,7 +1,19 @@
 import * as THREE from "https://cdn.skypack.dev/three@0.132.2";
 import {OrbitControls} from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
 import {GLTFLoader} from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
-import {FBXLoader} from "https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/FBXLoader.js";
+
+const ACTION_ATTACK = "Slash10";
+const ACTION_ATTACK2 = "Slash20";
+const ACTION_IDLE = "StandingIdle0";
+const ACTION_WALK = "WalkForward0";
+
+const HERO_SWORD = "HERO_SWORD";
+const HERO_AXE = "HERO_AXE";
+const HERO_KATANA = "HERO_KATANA";
+
+let app;
+let gamestart;
+let isSlash = true;
 
 class App {
 
@@ -26,13 +38,6 @@ class App {
         this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000);
         this.camera.position.set(0, 500, 1000);
 
-        // light
-        /*const color = 0xffffff;
-        const intensity = 5;
-        const light = new THREE.DirectionalLight(color, intensity);
-        light.position.set(0, 500, -1000);
-        this.scene.add(light);*/
-
         let light = new THREE.HemisphereLight(0xffffff, 0x444444);
         light.position.set(0, 200, 0);
         this.scene.add(light);
@@ -50,44 +55,66 @@ class App {
 
         // control
         this.control = new OrbitControls(this.camera, this.container);
-        //this.control.autoRotate = true;
 
-        this.setBackground(new THREE.MeshPhongMaterial({
-            color: 0x999999,
-            depthWrite: false
-        }));
-        this.setColliders(new THREE.BoxGeometry(500, 400, 500),
-            new THREE.MeshBasicMaterial({color: 0x222222, wireframe: true}));
+        this.setBackground(new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false }));
+        this.setColliders(
+            new THREE.BoxGeometry(500, 400, 500),
+            new THREE.MeshBasicMaterial({ color: 0x222222, wireframe: true })
+        );
 
+        this._initHeroes();
+        this._initMonsters(onLoaded);
+
+        this.count = 0;
+        this._render(1);
+    }
+
+    _initHeroes() {
+        this.heroes = {};
+        new Hero('./model/hero/Axe.glb', h => { this.heroes[HERO_AXE] = h });
+        new Hero('./model/hero/Katana.glb', h => { this.heroes[HERO_KATANA] = h; });
+        new Hero('./model/hero/Sword.glb', h => { this.heroes[HERO_SWORD] = h; });
+        console.log(this.heroes);
+    }
+
+    _initMonsters(onLoaded) {
         this.monsters = [];
         //new Monster('./model/monster_doozy.glb', m => {this.monsters.push(m)});
-        new Monster('./model/monster_guard.glb', m => {this.monsters.push(m)}, 10,
+        new Monster('./model/monster/monster_guard.glb', m => {
+                this.monsters.push(m)
+            }, 10,
             new THREE.MeshPhongMaterial({
-            color: 0x000089,
-            depthWrite: false
-        }));
-        new Monster('./model/monster_maskman.glb', m => {this.monsters.push(m)}, 20,new THREE.MeshPhongMaterial({
+                color: 0x000089,
+                depthWrite: false
+            }));
+        new Monster('./model/monster/monster_maskman.glb', m => {
+            this.monsters.push(m)
+        }, 20, new THREE.MeshPhongMaterial({
             color: 0x00ffff,
             depthWrite: false
         }));
-        new Monster('./model/monster_mouse.glb', m => {this.monsters.push(m)}, 30,new THREE.MeshPhongMaterial({
+        new Monster('./model/monster/monster_mouse.glb', m => {
+            this.monsters.push(m)
+        }, 30, new THREE.MeshPhongMaterial({
             color: 0xff0000,
             depthWrite: false
         }));
-        new Monster('./model/monster_rabbit.glb', m => {this.monsters.push(m)}, 40,new THREE.MeshPhongMaterial({
+        new Monster('./model/monster/monster_rabbit.glb', m => {
+            this.monsters.push(m)
+        }, 40, new THREE.MeshPhongMaterial({
             color: 0x001000,
             depthWrite: false
         }));
-        new Monster('./model/monster_zombie.glb', m => {this.monsters.push(m)}, 50,new THREE.MeshPhongMaterial({
-            color: 0x00f500,
-            depthWrite: false
-        }));
+        new Monster('./model/monster/monster_zombie.glb', m => {
+                this.monsters.push(m);
+                onLoaded()},
+            50,
+            new THREE.MeshPhongMaterial({
+                color: 0x00f500,
+                depthWrite: false
+            }));
 
         this.monsterIdx = 0;
-
-        this._render(1);
-
-        onLoaded();
     }
 
     _render(time) {
@@ -96,6 +123,12 @@ class App {
             this.hero.updateAnimation(time);
         }
         if (this.monster) {
+            this.count += 1;
+            if (this.count > 1000) {
+                gameOver();
+                return;
+            }
+            this.monster.model.scale.multiplyScalar(1.001);
             this.monster.updateAnimation(time);
         }
         this.control.update();
@@ -124,7 +157,7 @@ class App {
     setColliders(newGeometry, newMaterial) {
         if (this.stage) {
             this.scene.remove(this.stage);
-            for (let i=0; i<this.colliders.length; i++) {
+            for (let i = 0; i < this.colliders.length; i++) {
                 this.scene.remove(this.colliders[i]);
             }
         }
@@ -135,7 +168,7 @@ class App {
 
         for (let x = -5000; x < 5000; x += 1000) {
             for (let z = 0; z < 5000; z += 1000) {
-                if (x == 0 && z == 0) continue;
+                if (x === 0 && z === 0) continue;
                 const box = new THREE.Mesh(geometry, material);
                 box.position.set(x, 250, z);
                 this.scene.add(box);
@@ -154,15 +187,17 @@ class App {
 
     setHero(hero) {
         if (this.hero) {
-            this.scene.remove(this.hero.model);
-            this.hero = null;
+            let toRemove = this.hero.model;
+            this.hero.model.position.y -= 100;
+            this.hero.model.position.z = 100;
+            this.scene.remove(toRemove);
         }
-        this.hero = hero;
+        this.hero = this.heroes[hero];
+        console.log(hero + " " + this.hero)
+        console.log(this.heroes);
+        this.hero.model.position.y += 100;
         this.hero.model.position.z -= 560;
         this.scene.add(this.hero.model);
-
-        this.control.autoRotate = true;
-        this.control.autoRotateSpeed = 4.0;
     }
 
     setMonster(monster) {
@@ -175,10 +210,9 @@ class App {
         //this.monster.position.y = 68;
 
         this.mesh.material = this.monster.bgMaterial;
-        const material = new THREE.MeshStandardMaterial({
+        this.mesh.material = new THREE.MeshStandardMaterial({
             metalness: 1,
         });
-        this.mesh.material = material;
         this.mesh.material.needsUpdate = true;
 
         this.colliders.forEach(c => {
@@ -190,10 +224,14 @@ class App {
         this.scene.add(this.monster.HPbar);
     }
 
-    removeMonster() {
+    nextMonster() {
         if (!this.monster) {
             return;
         }
+        let scalar = Math.pow(0.999, this.count);
+        this.monster.model.scale.multiplyScalar(scalar);
+        this.monster.model.rotation.y -= Math.PI;
+        this.count = 0;
         let monster = this.monster;
         app.scene.remove(monster.model);
         app.scene.remove(monster.HPbar);
@@ -203,10 +241,7 @@ class App {
 
         this.setMonster(this.monsters[this.monsterIdx]);
 
-        window.onclick = function () {
-            app.hero.changeAnimation('ATTACK');
-            app.monster.changeAnimation('HIT_REACTION');
-        }
+        document.onclick = function() { docOnclick(); }
     }
 }
 
@@ -245,39 +280,50 @@ class Hero {
             this.mixer = mixer;
 
             this.animations = {};
+            console.log(modelPath+" \n");
             console.log(gltf.animations);
+            gltf.animations.forEach(clip => {
+                const name = clip.name;
+                this.animations[name] = mixer.clipAction(clip);
+            });
 
-            const attackAction = gltf.mixer.clipAction(gltf.animations[2]);
+            const attackAction = this.animations[ACTION_ATTACK]
             attackAction.setLoop(THREE.LoopOnce);
             attackAction.setDuration(0.7);
-            this.animations['ATTACK'] = attackAction;
-
-            const idleAction = gltf.mixer.clipAction(gltf.animations[3]);
-            this.animations['IDLE'] = idleAction;
-
-            const walkAction = gltf.mixer.clipAction(gltf.animations[0]);
+            const attackAction2 = this.animations[ACTION_ATTACK2]
+            attackAction2.setLoop(THREE.LoopOnce);
+            attackAction2.setDuration(0.7);
+            const idleAction = this.animations[ACTION_IDLE];
+            const walkAction = this.animations[ACTION_WALK]
             walkAction.setDuration(2);
-            this.animations['WALK'] = walkAction;
 
-            this.curAnimation = walkAction;
-            walkAction.play();
+            this.curAnimation = idleAction;
+            idleAction.play();
 
             mixer.addEventListener('finished', _ => {
                 if (this.curAnimation === attackAction) {
-                    this.changeAnimation('IDLE');
+                    this.changeAnimation(ACTION_IDLE);
                 }
             });
 
             mixer.addEventListener('loop', _ => {
                 if (this.curAnimation === walkAction) {
+                    app.control.autoRotate = true;
+                    app.control.autoRotateSpeed = 4.0;
+                    document.onclick = function () {};
                     this.model.translateZ(50);
-                    if (++this.walkCount > 5) {
+                    if (++this.walkCount > 4) {
                         app.control.autoRotate = false;
-                        app.camera.zoom = 3;
+                        app.camera.zoom = 2.5;
                         app.camera.updateProjectionMatrix();
                         walkAction.fadeOut(0.5);
                         gamestart.className = "hide";
-                        this.changeAnimation('IDLE');
+                        this.changeAnimation(ACTION_IDLE);
+
+                        console.log("WALKEND: " + this.model.position.z)
+                        document.onclick = function () {
+                            docOnclick();
+                        }
                     }
                 }
             });
@@ -312,7 +358,7 @@ class Hero {
 class Monster {
     prevAnimationTick = 0;
 
-    constructor(modelPath, onModelLoaded, hit, bgmaterial) {
+    constructor(modelPath, onModelLoaded, hp, bgmaterial) {
         const gltfLoader = new GLTFLoader();
         gltfLoader.load(modelPath, (gltf) => {
             gltf.scene.position.y = 68;
@@ -373,8 +419,8 @@ class Monster {
             console.log(gltf.animations);
 
             gltf.animations.forEach(clip => {
-               const name = clip.name;
-               this.animations[name] = mixer.clipAction(clip);
+                const name = clip.name;
+                this.animations[name] = mixer.clipAction(clip);
             });
 
             const attackAction = this.animations['HIT_REACTION'];
@@ -413,29 +459,44 @@ class Monster {
     }
 }
 
-var app;
-var gamestart;
+function gameOver() {
+    document.getElementById('gameoverInstructions').className = "show";
+    document.onclick = function () {
+        
+    }
+}
+
+function docOnclick() {
+    if (isSlash) {
+        app.hero.changeAnimation(ACTION_ATTACK);
+    } else {
+        app.hero.changeAnimation(ACTION_ATTACK2);
+    }
+
+    isSlash = !isSlash;
+    app.monster.changeAnimation('HIT_REACTION');
+}
 
 window.onload = function () {
     gamestart = document.getElementById('gamestartInstructions');
     gamestart.className = "show";
 
-    app = new App( function() {
-
+    app = new App(function () {
+        app.setHero(HERO_KATANA);
+        new Monster('./model/monster/monster_doozy.glb', monster => {
+            app.setMonster(monster);
+            app.hero.changeAnimation(ACTION_WALK);
+        }, 10, new THREE.MeshPhongMaterial({color: 0x00f000}));
     });
-    const hero = new Hero('./model/finished.glb',hero => {
-        app.setHero(hero);
-    });
-    const monster = new Monster('./model/monster_doozy.glb', monster => {
-        app.setMonster(monster);
-    }, 10, new THREE.MeshPhongMaterial({
-        color: 0x00f000,
-        depthWrite: false
-    }));
 
-    window.onclick = function () {
-        hero.changeAnimation('ATTACK');
-        monster.changeAnimation('HIT_REACTION');
+    document.getElementById('toSword').onclick = function() {
+        app.setHero(HERO_SWORD);
+    }
+    document.getElementById('toAxe').onclick = function() {
+        app.setHero(HERO_AXE);
+    }
+    document.getElementById('toKatana').onclick = function() {
+        app.setHero(HERO_KATANA);
     }
 
 }
