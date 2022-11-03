@@ -7,6 +7,7 @@ const ACTION_ATTACK2 = "Slash20";
 const ACTION_IDLE = "StandingIdle0";
 const ACTION_WALK = "WalkForward0";
 const ACTION_FINISH = "Finish0";
+
 const HERO_SWORD = "HERO_SWORD";
 const HERO_AXE = "HERO_AXE";
 const HERO_KATANA = "HERO_KATANA";
@@ -42,10 +43,12 @@ class App {
         light.position.set(0, 200, 0);
         this.scene.add(light);
 
-        const shadowSize = 200;
+        const shadowSize = 500;
         light = new THREE.DirectionalLight(0xffffff);
         light.position.set(0, 200, -100);
         light.castShadow = true;
+        light.shadow.mapSize.x = 2048
+        light.shadow.mapSize.y = 2048
         light.shadow.camera.top = shadowSize;
         light.shadow.camera.bottom = -shadowSize;
         light.shadow.camera.left = -shadowSize;
@@ -124,8 +127,14 @@ class App {
         }
         if (this.monster) {
             this.count += 1;
-            if (this.count > 1000) {
+            const clampNumber = (num, min, max) => Math.max(Math.min(num, Math.max(min, max)), Math.min(min, max));
+            this.maximum = 2200;
+            this.minimum = 1000;
+            this.countEnd = this.monster.hit*100*0.75
+            
+            if (this.count > clampNumber(this.countEnd, this.minimum, this.maximum)) {
                 gameOver();
+                console.log(this.count);
                 return;
             }
             this.monster.model.scale.multiplyScalar(1.001);
@@ -249,14 +258,15 @@ class Hero {
     prevAnimationTick = 0;
     walkCount = 0;
 
+
     constructor(modelPath, onModelLoaded, type) {
         const fbxLoader = new GLTFLoader();
-        fbxLoader.load(modelPath, (fbx) => {
+        fbxLoader.load(modelPath, (gltf) => {
             this.model = new THREE.Object3D();
-            this.model.add(fbx.scene);
+            this.model.add(gltf.scene);
 
             // load model
-            fbx.scene.traverse(child => {
+            gltf.scene.traverse(child => {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
@@ -274,15 +284,16 @@ class Hero {
             });
 
             // model animation
-            const mixer = new THREE.AnimationMixer(fbx.scene);
+            const mixer = new THREE.AnimationMixer(gltf.scene);
 
-            fbx.mixer = mixer;
+            gltf.mixer = mixer;
             this.mixer = mixer;
 
             this.animations = {};
             console.log(modelPath+" \n");
-            console.log(fbx.animations);
-            fbx.animations.forEach(clip => {
+
+            console.log(gltf.animations);
+            gltf.animations.forEach(clip => {
                 const name = clip.name;
                 this.animations[name] = mixer.clipAction(clip);
             });
@@ -296,6 +307,7 @@ class Hero {
             const idleAction = this.animations[ACTION_IDLE];
             const walkAction = this.animations[ACTION_WALK]
             walkAction.setDuration(2);
+
             const finishAction = this.animations[ACTION_FINISH];
             finishAction.setLoop(THREE.LoopOnce);
             finishAction.setDuration(0.7);
@@ -305,6 +317,7 @@ class Hero {
             idleAction.play();
 
             mixer.addEventListener('finished', _ => {
+
                 if (this.curAnimation === attackAction || this.curAnimation === finishAction) {
                     app.camera.zoom = 2.5;
                     app.camera.updateProjectionMatrix();
@@ -315,12 +328,14 @@ class Hero {
             mixer.addEventListener('loop', _ => {
                 if (this.curAnimation === walkAction) {
                     app.control.autoRotate = true;
-                    app.control.autoRotateSpeed = 4.0;
+                    app.control.autoRotateSpeed = 9.0;
+
                     document.onclick = function () {};
                     this.model.translateZ(50);
                     if (++this.walkCount > 4) {
                         app.control.autoRotate = false;
-                        app.camera.zoom = 2.5;
+                        app.camera.zoom = 1.5;
+
                         app.camera.updateProjectionMatrix();
                         walkAction.fadeOut(0.5);
                         gamestart.className = "hide";
@@ -370,16 +385,16 @@ class Hero {
 class Monster {
     prevAnimationTick = 0;
 
-    constructor(modelPath, onModelLoaded, hp, bgmaterial) {
-        const fbxLoader = new GLTFLoader();
-        fbxLoader.load(modelPath, (fbx) => {
-            fbx.scene.position.y = 68;
+    constructor(modelPath, onModelLoaded, hit, bgmaterial) {
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.load(modelPath, (gltf) => {
+            gltf.scene.position.y = 68;
 
             this.model = new THREE.Object3D();
-            this.model.add(fbx.scene);
+            this.model.add(gltf.scene);
 
             // load model
-            fbx.scene.traverse(child => {
+            gltf.scene.traverse(child => {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
@@ -392,11 +407,14 @@ class Monster {
             });
 
             // 몬스터 체력바
-            this.hp = hp;
-            const geometry = new THREE.BoxGeometry(this.hp, 10, 10);
-            const material = new THREE.MeshBasicMaterial({  });
+            this.hit = hit;
+            this.hit_count = 0;
+            this.bleed = hit/10;
+            this.hp = 150;
+            const geometry = new THREE.BoxGeometry(10, this.hp, 10);
+            const material = new THREE.MeshMatcapMaterial({color: 0xff0000});
             const cube = new THREE.Mesh(geometry, material);
-            cube.position.set(1, 155, 1);
+            cube.position.set(-60, this.hp/2+5, 30);
             this.HPbar = cube;
 
             this.bgMaterial = bgmaterial;
@@ -404,30 +422,32 @@ class Monster {
             this.coldMaterial = new THREE.MeshBasicMaterial({color: bgmaterial.color, wireframe: true})
 
             // 애니메이션
-            const mixer = new THREE.AnimationMixer(fbx.scene);
+            const mixer = new THREE.AnimationMixer(gltf.scene);
             mixer.addEventListener('finished', _ => {
                 this.changeAnimation('IDLE');
-                this.hp -= 10;
-                if (this.hp <= 10) {
-                    this.nextFinish = true;
+
+                if (++this.hit_count % this.bleed == 0){
+                    this.hp -= 15;
+                    this.HPbar.position.y = this.hp/2+5;
+                    console.log("hp "+this.hp+", hit_count "+this.hit_count);
                 }
                 if (this.hp <= 0) {
-                    /*app.hero.changeAnimation(ACTION_FINISH);*/
                     app.nextMonster();
-                    this.nextFinish = false;
+                    this.hp = 150;
+                    this.hit_count = 0;
                     return;
                 }
-                this.HPbar.geometry = new THREE.BoxGeometry(this.hp, 10, 10);
+                this.HPbar.geometry = new THREE.BoxGeometry(10, this.hp, 10);
                 this.HPbar.geometry.needsUpdate = true;
             });
 
-            fbx.mixer = mixer;
+            gltf.mixer = mixer;
             this.mixer = mixer;
 
             this.animations = {};
-            console.log(fbx.animations);
+            console.log(gltf.animations);
 
-            fbx.animations.forEach(clip => {
+            gltf.animations.forEach(clip => {
                 const name = clip.name;
                 this.animations[name] = mixer.clipAction(clip);
             });
