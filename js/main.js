@@ -311,7 +311,7 @@ class Hero {
             mixer.addEventListener('loop', _ => {
                 if (this.curAnimation === walkAction) {
                     app.control.autoRotate = true;
-                    app.control.autoRotateSpeed = 4.0;
+                    app.control.autoRotateSpeed = 9.0;
                     document.onclick = function () {};
                     this.model.translateZ(50);
                     if (++this.walkCount > 4) {
@@ -386,10 +386,10 @@ class Monster {
             this.hit_count = 0;
             this.bleed = hit/10;
             this.hp = 150;
-            const geometry = new THREE.BoxGeometry(this.hp, 10, 10);
-            const material = new THREE.MeshMatcapMaterial({color: 0xffffff});
+            const geometry = new THREE.BoxGeometry(10, this.hp, 10);
+            const material = new THREE.MeshMatcapMaterial({color: 0xff0000});
             const cube = new THREE.Mesh(geometry, material);
-            cube.position.set(1, 155, 1);
+            cube.position.set(-60, this.hp/2+5, 30);
             this.HPbar = cube;
 
             this.bgMaterial = bgmaterial;
@@ -402,6 +402,7 @@ class Monster {
                 this.changeAnimation('IDLE');
                 if (++this.hit_count % this.bleed == 0){
                     this.hp -= 15;
+                    this.HPbar.position.y = this.hp/2+5;
                     console.log("hp "+this.hp+", hit_count "+this.hit_count);
                 }
                 if (this.hp <= 0) {
@@ -410,7 +411,7 @@ class Monster {
                     this.hit_count = 0;
                     return;
                 }
-                this.HPbar.geometry = new THREE.BoxGeometry(this.hp, 10, 10);
+                this.HPbar.geometry = new THREE.BoxGeometry(10, this.hp, 10);
                 this.HPbar.geometry.needsUpdate = true;
             });
 
