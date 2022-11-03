@@ -42,10 +42,12 @@ class App {
         light.position.set(0, 200, 0);
         this.scene.add(light);
 
-        const shadowSize = 200;
+        const shadowSize = 500;
         light = new THREE.DirectionalLight(0xffffff);
         light.position.set(0, 200, -100);
         light.castShadow = true;
+        light.shadow.mapSize.x = 2048
+        light.shadow.mapSize.y = 2048
         light.shadow.camera.top = shadowSize;
         light.shadow.camera.bottom = -shadowSize;
         light.shadow.camera.left = -shadowSize;
@@ -314,7 +316,7 @@ class Hero {
                     this.model.translateZ(50);
                     if (++this.walkCount > 4) {
                         app.control.autoRotate = false;
-                        app.camera.zoom = 2.5;
+                        app.camera.zoom = 1.5;
                         app.camera.updateProjectionMatrix();
                         walkAction.fadeOut(0.5);
                         gamestart.className = "hide";
