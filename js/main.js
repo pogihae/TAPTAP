@@ -6,7 +6,7 @@ const ACTION_ATTACK = "Slash10";
 const ACTION_ATTACK2 = "Slash20";
 const ACTION_IDLE = "StandingIdle0";
 const ACTION_WALK = "WalkForward0";
-
+const ACTION_FINISH = "Finish0";
 const HERO_SWORD = "HERO_SWORD";
 const HERO_AXE = "HERO_AXE";
 const HERO_KATANA = "HERO_KATANA";
@@ -296,12 +296,16 @@ class Hero {
             const idleAction = this.animations[ACTION_IDLE];
             const walkAction = this.animations[ACTION_WALK]
             walkAction.setDuration(2);
+            const finishAction = this.animations[ACTION_FINISH];
+            finishAction.setLoop(THREE.LoopOnce);
+            finishAction.setDuration(0.7);
+            this.finishAction = finishAction;
 
             this.curAnimation = idleAction;
             idleAction.play();
 
             mixer.addEventListener('finished', _ => {
-                if (this.curAnimation === attackAction) {
+                if (this.curAnimation === attackAction || this.curAnimation == finishAction) {
                     this.changeAnimation(ACTION_IDLE);
                 }
             });
@@ -399,6 +403,7 @@ class Monster {
                 this.changeAnimation('IDLE');
                 this.hp -= 10;
                 if (this.hp <= 0) {
+                    app.hero.changeAnimation(ACTION_FINISH);
                     app.nextMonster();
                     return;
                 }
