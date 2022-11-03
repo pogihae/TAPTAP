@@ -305,7 +305,9 @@ class Hero {
             idleAction.play();
 
             mixer.addEventListener('finished', _ => {
-                if (this.curAnimation === attackAction || this.curAnimation == finishAction) {
+                if (this.curAnimation === attackAction || this.curAnimation === finishAction) {
+                    app.camera.zoom = 2.5;
+                    app.camera.updateProjectionMatrix();
                     this.changeAnimation(ACTION_IDLE);
                 }
             });
@@ -347,6 +349,10 @@ class Hero {
         if (previousAnimationAction !== this.curAnimation) {
             //this.mixer.stopAllAction();
             //previousAnimationAction.fadeOut(0.5);
+            if (name === ACTION_FINISH) {
+                app.camera.zoom = 3;
+                app.camera.updateProjectionMatrix();
+            }
             this.curAnimation.reset().play();
         }
     }
