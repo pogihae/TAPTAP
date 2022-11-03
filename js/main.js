@@ -358,7 +358,7 @@ class Hero {
 class Monster {
     prevAnimationTick = 0;
 
-    constructor(modelPath, onModelLoaded, hp, bgmaterial) {
+    constructor(modelPath, onModelLoaded, hit, bgmaterial) {
         const gltfLoader = new GLTFLoader();
         gltfLoader.load(modelPath, (gltf) => {
             gltf.scene.position.y = 68;

@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>TAPTAP</title>
-    <link rel="stylesheet" href="game.css">
-    <link rel="stylesheet" href="index.css" type="text/css">
-    <script type="module" src="js/main.js"></script>
+    <link href="css/game.css" rel="stylesheet">
+    <link href="css/index.css" rel="stylesheet" type="text/css">
+    <script src="js/main.js" type="module"></script>
 </head>
 <body>
+
 <div id="world"></div>
 <div id="gamestartInstructions">
     TAP TAP
 </div>
+<div id="gameoverInstructions">
+    GAME OVER
+</div>
 
-    <div id="button1" class="button" onclick="func()">
-        <img src="image/sword_image.png" alt="Sword">
-    </div>
-    <div id="button2" class="button" onclick="func()">
-        <img src="image/ax_image.png" alt="Sword">
-    </div>
-    <div id="button3" class="button" onclick="func()">
-        <img src="image/katana_image.png" alt="Sword">
-    </div>
+<div class="button" id="toSword">
+    <img alt="Sword" src="image/sword_image.png">
+</div>
+<div class="button" id="toAxe">
+    <img alt="Axe" src="image/ax_image.png">
+</div>
+<div class="button" id="toKatana">
+    <img alt="Katana" src="image/katana_image.png">
+</div>
+
 </body>
-<script type="module" src="js/main.js"></script>
 </html>
-
