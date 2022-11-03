@@ -126,15 +126,14 @@ class App {
         }
         if (this.monster) {
             this.count += 1;
+            const clampNumber = (num, min, max) => Math.max(Math.min(num, Math.max(min, max)), Math.min(min, max));
             this.maximum = 2200;
             this.minimum = 1000;
             this.countEnd = this.monster.hit*100*0.75
-            if (this.countEnd > this.maximum)
-                this.countEnd = this.maximum;
-            else if (this.countEnd < this.minimum)
-                this.countEnd = this.minimum;
-            if (this.count > this.countEnd) {
+            
+            if (this.count > clampNumber(this.countEnd, this.minimum, this.maximum)) {
                 gameOver();
+                console.log(this.count);
                 return;
             }
             this.monster.model.scale.multiplyScalar(1.001);
