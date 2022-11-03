@@ -197,15 +197,15 @@ class App {
     setHero(hero) {
         if (this.hero) {
             let toRemove = this.hero.model;
-            this.hero.model.position.y -= 100;
-            this.hero.model.position.z = 100;
+            this.hero.model.position.y = 0;
+            this.hero.model.position.z = 250;
             this.scene.remove(toRemove);
         }
         this.hero = this.heroes[hero];
         console.log(hero + " " + this.hero)
         console.log(this.heroes);
-        this.hero.model.position.y += 100;
-        this.hero.model.position.z -= 560;
+        this.hero.model.position.y = 100;
+        this.hero.model.position.z = -310;
         this.scene.add(this.hero.model);
     }
 
@@ -319,7 +319,7 @@ class Hero {
             mixer.addEventListener('finished', _ => {
 
                 if (this.curAnimation === attackAction || this.curAnimation === finishAction) {
-                    app.camera.zoom = 2.5;
+                    app.camera.zoom = 1.5;
                     app.camera.updateProjectionMatrix();
                     this.changeAnimation(ACTION_IDLE);
                 }
@@ -335,13 +335,12 @@ class Hero {
                     if (++this.walkCount > 4) {
                         app.control.autoRotate = false;
                         app.camera.zoom = 1.5;
-
                         app.camera.updateProjectionMatrix();
                         walkAction.fadeOut(0.5);
                         gamestart.className = "hide";
                         this.changeAnimation(ACTION_IDLE);
 
-                        console.log("WALKEND: " + this.model.position.z)
+                        console.log("WALKEND: " + this.model.position.z + " " + this.model.position.y)
                         document.onclick = function () {
                             docOnclick();
                         }
@@ -426,7 +425,7 @@ class Monster {
             mixer.addEventListener('finished', _ => {
                 this.changeAnimation('IDLE');
 
-                if (++this.hit_count % this.bleed == 0){
+                if (++this.hit_count % this.bleed === 0){
                     this.hp -= 15;
                     this.HPbar.position.y = this.hp/2+5;
                     console.log("hp "+this.hp+", hit_count "+this.hit_count);
@@ -516,6 +515,7 @@ window.onload = function () {
         app.setHero(HERO_KATANA);
         new Monster('./model/monster/monster_doozy.glb', monster => {
             app.setMonster(monster);
+            app.hero.model.position.z -= 210;
             app.hero.changeAnimation(ACTION_WALK);
         }, 10, new THREE.MeshPhongMaterial({color: 0x00f000}));
     });
