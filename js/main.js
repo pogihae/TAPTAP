@@ -126,9 +126,9 @@ class App {
         }
         if (this.monster) {
             this.count += 1;
-            this.maximum = 2500;
+            this.maximum = 2200;
             this.minimum = 1000;
-            this.countEnd = this.monster.hit*100*0.3
+            this.countEnd = this.monster.hit*100*0.75
             if (this.countEnd > this.maximum)
                 this.countEnd = this.maximum;
             else if (this.countEnd < this.minimum)
