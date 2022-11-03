@@ -6,6 +6,7 @@ const ACTION_ATTACK = "Slash10";
 const ACTION_ATTACK2 = "Slash20";
 const ACTION_IDLE = "StandingIdle0";
 const ACTION_WALK = "WalkForward0";
+const ACTION_FINISH = "Finish0";
 
 const HERO_SWORD = "HERO_SWORD";
 const HERO_AXE = "HERO_AXE";
@@ -73,9 +74,9 @@ class App {
 
     _initHeroes() {
         this.heroes = {};
-        new Hero('./model/hero/Axe.glb', h => { this.heroes[HERO_AXE] = h });
-        new Hero('./model/hero/Katana.glb', h => { this.heroes[HERO_KATANA] = h; });
-        new Hero('./model/hero/Sword.glb', h => { this.heroes[HERO_SWORD] = h; });
+        new Hero('./model/hero/Axe.glb', h => { this.heroes[HERO_AXE] = h }, HERO_AXE);
+        new Hero('./model/hero/Katana.glb', h => { this.heroes[HERO_KATANA] = h; }, HERO_KATANA);
+        new Hero('./model/hero/Sword.glb', h => { this.heroes[HERO_SWORD] = h; }, HERO_SWORD);
         console.log(this.heroes);
     }
 
@@ -257,9 +258,10 @@ class Hero {
     prevAnimationTick = 0;
     walkCount = 0;
 
-    constructor(modelPath, onModelLoaded) {
-        const gltfLoader = new GLTFLoader();
-        gltfLoader.load(modelPath, (gltf) => {
+
+    constructor(modelPath, onModelLoaded, type) {
+        const fbxLoader = new GLTFLoader();
+        fbxLoader.load(modelPath, (gltf) => {
             this.model = new THREE.Object3D();
             this.model.add(gltf.scene);
 
@@ -289,6 +291,7 @@ class Hero {
 
             this.animations = {};
             console.log(modelPath+" \n");
+
             console.log(gltf.animations);
             gltf.animations.forEach(clip => {
                 const name = clip.name;
@@ -305,11 +308,19 @@ class Hero {
             const walkAction = this.animations[ACTION_WALK]
             walkAction.setDuration(2);
 
+            const finishAction = this.animations[ACTION_FINISH];
+            finishAction.setLoop(THREE.LoopOnce);
+            finishAction.setDuration(0.7);
+            this.finishAction = finishAction;
+
             this.curAnimation = idleAction;
             idleAction.play();
 
             mixer.addEventListener('finished', _ => {
-                if (this.curAnimation === attackAction) {
+
+                if (this.curAnimation === attackAction || this.curAnimation === finishAction) {
+                    app.camera.zoom = 2.5;
+                    app.camera.updateProjectionMatrix();
                     this.changeAnimation(ACTION_IDLE);
                 }
             });
@@ -318,11 +329,13 @@ class Hero {
                 if (this.curAnimation === walkAction) {
                     app.control.autoRotate = true;
                     app.control.autoRotateSpeed = 9.0;
+
                     document.onclick = function () {};
                     this.model.translateZ(50);
                     if (++this.walkCount > 4) {
                         app.control.autoRotate = false;
                         app.camera.zoom = 1.5;
+
                         app.camera.updateProjectionMatrix();
                         walkAction.fadeOut(0.5);
                         gamestart.className = "hide";
@@ -335,6 +348,8 @@ class Hero {
                     }
                 }
             });
+
+            this.type = type;
 
             onModelLoaded(this);
         });
@@ -349,6 +364,10 @@ class Hero {
         if (previousAnimationAction !== this.curAnimation) {
             //this.mixer.stopAllAction();
             //previousAnimationAction.fadeOut(0.5);
+            if (name === ACTION_FINISH) {
+                app.camera.zoom = 3;
+                app.camera.updateProjectionMatrix();
+            }
             this.curAnimation.reset().play();
         }
     }
@@ -400,12 +419,13 @@ class Monster {
 
             this.bgMaterial = bgmaterial;
 
-            this.coldMaterial =  new THREE.MeshBasicMaterial({color: bgmaterial.color, wireframe: true})
+            this.coldMaterial = new THREE.MeshBasicMaterial({color: bgmaterial.color, wireframe: true})
 
             // 애니메이션
             const mixer = new THREE.AnimationMixer(gltf.scene);
             mixer.addEventListener('finished', _ => {
                 this.changeAnimation('IDLE');
+
                 if (++this.hit_count % this.bleed == 0){
                     this.hp -= 15;
                     this.HPbar.position.y = this.hp/2+5;
@@ -476,8 +496,10 @@ function gameOver() {
 }
 
 function docOnclick() {
-    if (isSlash) {
+    if (isSlash && !app.monsterIdx.nextFinish) {
         app.hero.changeAnimation(ACTION_ATTACK);
+    } else if (app.monster.nextFinish) {
+        app.hero.changeAnimation(ACTION_FINISH);
     } else {
         app.hero.changeAnimation(ACTION_ATTACK2);
     }
