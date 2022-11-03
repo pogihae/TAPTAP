@@ -123,7 +123,6 @@ class App {
     }
 
     _render(time) {
-        if (gamefinish) return;
         this.renderer.render(this.scene, this.camera);
         if (this.hero) {
             this.hero.updateAnimation(time);
@@ -136,6 +135,7 @@ class App {
             this.countEnd = this.monster.hit*100*0.75
 
             if (this.count > clampNumber(this.countEnd, this.minimum, this.maximum)) {
+                if (gamefinish) return;
                 gameOver();
                 console.log(this.count);
                 return;
