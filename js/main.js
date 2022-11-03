@@ -408,9 +408,13 @@ class Monster {
             mixer.addEventListener('finished', _ => {
                 this.changeAnimation('IDLE');
                 this.hp -= 10;
+                if (this.hp <= 10) {
+                    this.nextFinish = true;
+                }
                 if (this.hp <= 0) {
-                    app.hero.changeAnimation(ACTION_FINISH);
+                    /*app.hero.changeAnimation(ACTION_FINISH);*/
                     app.nextMonster();
+                    this.nextFinish = false;
                     return;
                 }
                 this.HPbar.geometry = new THREE.BoxGeometry(this.hp, 10, 10);
@@ -472,8 +476,10 @@ function gameOver() {
 }
 
 function docOnclick() {
-    if (isSlash) {
+    if (isSlash && !app.monsterIdx.nextFinish) {
         app.hero.changeAnimation(ACTION_ATTACK);
+    } else if (app.monster.nextFinish) {
+        app.hero.changeAnimation(ACTION_FINISH);
     } else {
         app.hero.changeAnimation(ACTION_ATTACK2);
     }
