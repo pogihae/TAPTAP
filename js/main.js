@@ -71,9 +71,9 @@ class App {
 
     _initHeroes() {
         this.heroes = {};
-        new Hero('./model/hero/Axe.glb', h => { this.heroes[HERO_AXE] = h });
-        new Hero('./model/hero/Katana.glb', h => { this.heroes[HERO_KATANA] = h; });
-        new Hero('./model/hero/Sword.glb', h => { this.heroes[HERO_SWORD] = h; });
+        new Hero('./model/hero/Axe.glb', h => { this.heroes[HERO_AXE] = h }, HERO_AXE);
+        new Hero('./model/hero/Katana.glb', h => { this.heroes[HERO_KATANA] = h; }, HERO_KATANA);
+        new Hero('./model/hero/Sword.glb', h => { this.heroes[HERO_SWORD] = h; }, HERO_SWORD);
         console.log(this.heroes);
     }
 
@@ -249,7 +249,7 @@ class Hero {
     prevAnimationTick = 0;
     walkCount = 0;
 
-    constructor(modelPath, onModelLoaded) {
+    constructor(modelPath, onModelLoaded, type) {
         const fbxLoader = new GLTFLoader();
         fbxLoader.load(modelPath, (fbx) => {
             this.model = new THREE.Object3D();
@@ -327,6 +327,8 @@ class Hero {
                     }
                 }
             });
+
+            this.type = type;
 
             onModelLoaded(this);
         });
