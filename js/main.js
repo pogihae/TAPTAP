@@ -403,7 +403,7 @@ class Monster {
                     console.log("hp "+this.hp+", hit_count "+this.hit_count);
                 }
                 if (this.hp <= 0) {
-                    app.removeMonster();
+                    app.nextMonster();
                     this.hp = 150;
                     this.hit_count = 0;
                     return;
