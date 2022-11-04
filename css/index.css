@@ -60,8 +60,25 @@
     transition: all 1000ms ease-in-out;
 }
 
-#gameoverInstructions.hide {
+#gameclearInstructions {
+    position: absolute;
+    font-family: "Voltaire", sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 120px;
+    text-align: center;
+    color: #ffc5a2;
     opacity: 0;
+    left: 50%;
+    top: 50%;
+    width: 100%;
+    transform: translate(-50%, -100%);
+    user-select: none;
+    transition: all 1000ms ease-in-out;
+}
+
+#gameclearInstructions.show {
+    opacity: 1;
     transform: translate(-50%, -50%);
     transition: all 1000ms ease-in-out;
 }

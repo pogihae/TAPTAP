@@ -514,7 +514,11 @@ function gameOver() {
 }
 
 function gameFinish() {
-    alert("FINISH");
+    document.getElementById('gameclearInstructions').className = "show";
+    document.onclick = function () {
+
+    }
+    //alert("FINISH");
 }
 
 function docOnclick() {
